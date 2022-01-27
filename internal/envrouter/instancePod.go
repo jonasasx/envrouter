@@ -23,9 +23,9 @@ func NewInstancePodService(
 }
 
 func (i *instancePodService) FindAll() ([]*api.InstancePod, error) {
-	deployments := i.podService.GetAll()
+	pods := i.podService.GetAll()
 	var result []*api.InstancePod
-	for _, v := range deployments {
+	for _, v := range pods {
 		instancePod := mapInstancePod(v)
 		result = append(result, instancePod)
 	}
