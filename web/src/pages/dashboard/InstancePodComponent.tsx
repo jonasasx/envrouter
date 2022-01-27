@@ -22,10 +22,12 @@ export default withStyles(styles)(function InstancePodComponent(props: InstanceP
         {key: "Application", value: instancePod.application},
         {key: "Environment", value: instancePod.environment},
         {key: "Shard", value: "s01"},
-        {key: "Status",
+        {
+            key: "Status",
             value: <Chip label={instancePod.phase} color={instancePod.phase === "Running" ? "success" : "warning"}
                          variant="outlined" size="small"/>
         },
+        {key: "Created", value: instancePod.createdTime},
         {key: "Started", value: instancePod.startedTime},
         {key: "Branch", value: instancePod.ref || "-"},
         {key: "Commit", value: instancePod.commitSha},
