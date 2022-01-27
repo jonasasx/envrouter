@@ -1,0 +1,224 @@
+openapi: 3.0.3
+info:
+  title: Envrouter API
+  description: Envrouter API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/
+components:
+  schemas:
+    Repository:
+      type: object
+      required:
+        - name
+        - url
+        - credentialsSecret
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+        credentialsSecret:
+          type: string
+    CredentialsSecretListItem:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+    CredentialsSecretRequest:
+      type: object
+      required:
+        - key
+        - username
+        - password
+      properties:
+        key:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+    Application:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        repositoryName:
+          type: string
+    Environment:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+    RefBinding:
+      type: object
+      required:
+        - environment
+        - application
+        - ref
+      properties:
+        environment:
+          type: string
+        application:
+          type: string
+        ref:
+          type: string
+    Instance:
+      type: object
+      required:
+        - type
+        - name
+        - environment
+        - application
+      properties:
+        type:
+          type: string
+          enum: [ "deployment" ]
+        name:
+          type: string
+        environment:
+          type: string
+        application:
+          type: string
+        ref:
+          type: string
+        commitSha:
+          type: string
+
+paths:
+  "/api/v1/repositories":
+    get:
+      summary: Get all repositories
+      responses:
+        "200":
+          description: Get all repositories
+          content:
+            "application/json":
+              "schema":
+                "type": "array"
+                "items":
+                  "$ref": "#/components/schemas/Repository"
+  "/api/v1/credentialsSecrets":
+    get:
+      responses:
+        "200":
+          description: Get list of credentialsSecrets
+          content:
+            "application/json":
+              "schema":
+                "type": "array"
+                "items":
+                  "$ref": "#/components/schemas/CredentialsSecretListItem"
+    post:
+      description: Create Credential secret
+      requestBody:
+        content:
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/CredentialsSecretRequest"
+      responses:
+        "201":
+          description: Success
+          content:
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/CredentialsSecretListItem"
+  "/api/v1/credentialsSecrets/{name}":
+    delete:
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        "204":
+          description: Success
+  "/api/v1/applications":
+    get:
+      responses:
+        "200":
+          description: Get list of applications
+          content:
+            "application/json":
+              "schema":
+                "type": "array"
+                "items":
+                  "$ref": "#/components/schemas/Application"
+  "/api/v1/applications/{name}":
+    put:
+      description: Update Application
+      parameters:
+        - in: path
+          name: name
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/Application"
+      responses:
+        "200":
+          description: Success
+          content:
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Application"
+  "/api/v1/environments":
+    get:
+      responses:
+        "200":
+          description: Get list of environments
+          content:
+            "application/json":
+              "schema":
+                "type": "array"
+                "items":
+                  "$ref": "#/components/schemas/Environment"
+  "/api/v1/instances":
+    get:
+      responses:
+        "200":
+          description: Get list of instances
+          content:
+            "application/json":
+              "schema":
+                "type": "array"
+                "items":
+                  "$ref": "#/components/schemas/Instance"
+  "/api/v1/refBindings":
+    get:
+      responses:
+        "200":
+          description: Get list of RefBinding
+          content:
+            "application/json":
+              "schema":
+                "type": "array"
+                "items":
+                  "$ref": "#/components/schemas/RefBinding"
+    post:
+      description: Create RefBinding
+      requestBody:
+        content:
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/RefBinding"
+      responses:
+        "201":
+          description: Success
+          content:
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/RefBinding"
