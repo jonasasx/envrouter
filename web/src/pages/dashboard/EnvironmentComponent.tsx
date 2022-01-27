@@ -3,6 +3,8 @@ import {Application, Environment, RefBinding} from "../../axios";
 import {Theme} from "@mui/material/styles";
 import {Card, CardContent, CardHeader} from "@mui/material";
 import ApplicationComponent from "./ApplicationComponent";
+import {Property} from "csstype"
+
 
 interface EnvironmentProps extends WithStyles<typeof styles> {
     environment: Environment
@@ -11,6 +13,9 @@ interface EnvironmentProps extends WithStyles<typeof styles> {
 }
 
 const styles = (theme: Theme) => ({
+    cardHeader: {
+        textAlign: 'left' as Property.TextAlign,
+    },
     cardContent: {
         padding: 0,
         "&:last-child": {
@@ -23,7 +28,7 @@ export default withStyles(styles)(function EnvironmentComponent(props: Environme
     const {classes, environment, applications, refBindings} = props
     return (
         <Card>
-            <CardHeader title={environment.name}/>
+            <CardHeader className={classes.cardHeader} title={environment.name}/>
             <CardContent className={classes.cardContent}>
                 {
                     applications.map(application => <ApplicationComponent

@@ -29,7 +29,6 @@ export default withStyles(styles)(function ApplicationComponent(props: Applicati
                 <TextField variant="standard" size="small" defaultValue={refBinding?.ref} />
             </Grid>
             <Grid item xs={12}>
-2
             </Grid>
         </Grid>
     )

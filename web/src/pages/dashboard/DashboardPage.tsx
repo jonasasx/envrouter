@@ -3,15 +3,15 @@ import {useEffect, useState} from "react";
 import {Application, DefaultApiFp, Environment, RefBinding} from "../../axios";
 import EnvironmentComponent from "./EnvironmentComponent";
 import sum from "hash-sum";
-import {createStore} from "redux";
 
 const api = DefaultApiFp()
 
 export default function DashboardPage() {
     const [environments, setEnvironments] = useState<Array<Environment>>([])
     const [applications, setApplications] = useState<Array<Application>>([])
-    const [applicationsHash, setApplicationsHash] = useState<string>("")
     const [refBindings, setRefBindings] = useState<Array<RefBinding>>([])
+
+    const [applicationsHash, setApplicationsHash] = useState<string>("")
     const [refBindingHashes, setRefBindingHashes] = useState<Map<string, string>>(new Map<string, string>())
 
     useEffect(() => {
