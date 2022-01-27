@@ -45,6 +45,20 @@ type Instance struct {
 // InstanceType defines model for Instance.Type.
 type InstanceType string
 
+// InstancePod defines model for InstancePod.
+type InstancePod struct {
+	Application string  `json:"application"`
+	CommitSha   *string `json:"commitSha,omitempty"`
+	CreatedTime string  `json:"createdTime"`
+	Environment string  `json:"environment"`
+	Name        string  `json:"name"`
+	Phase       string  `json:"phase"`
+	Ready       bool    `json:"ready"`
+	Ref         *string `json:"ref,omitempty"`
+	Started     bool    `json:"started"`
+	StartedTime *string `json:"startedTime,omitempty"`
+}
+
 // RefBinding defines model for RefBinding.
 type RefBinding struct {
 	Application string `json:"application"`
@@ -76,3 +90,4 @@ type PostApiV1CredentialsSecretsJSONRequestBody PostApiV1CredentialsSecretsJSONB
 
 // PostApiV1RefBindingsJSONRequestBody defines body for PostApiV1RefBindings for application/json ContentType.
 type PostApiV1RefBindingsJSONRequestBody PostApiV1RefBindingsJSONBody
+

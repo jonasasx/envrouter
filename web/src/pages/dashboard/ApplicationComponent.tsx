@@ -1,5 +1,5 @@
 import {WithStyles, withStyles} from "@mui/styles";
-import {Application, Instance, RefBinding} from "../../axios";
+import {Application, Instance, InstancePod, RefBinding} from "../../axios";
 import {Theme} from "@mui/material/styles";
 import {Grid, TextField} from "@mui/material";
 import InstanceComponent from "./InstanceComponent";
@@ -8,6 +8,7 @@ interface ApplicationProps extends WithStyles<typeof styles> {
     application: Application
     refBinding: RefBinding | undefined
     instances: Array<Instance>
+    instancePods: Array<InstancePod>
 }
 
 const styles = (theme: Theme) => ({
@@ -23,7 +24,7 @@ const styles = (theme: Theme) => ({
 })
 
 export default withStyles(styles)(function ApplicationComponent(props: ApplicationProps) {
-    const {classes, application, refBinding, instances} = props
+    const {classes, application, refBinding, instances, instancePods} = props
     return (
         <Grid className={classes.row} container>
             <Grid item xs={6} style={{display: "flex", alignItems: "flex-start"}}>
@@ -34,7 +35,7 @@ export default withStyles(styles)(function ApplicationComponent(props: Applicati
             </Grid>
             <Grid className={classes.instances} item xs={12}>
                 {
-                    instances.map(i => <InstanceComponent key={i.name} instance={i}/>)
+                    instances.map(i => <InstanceComponent key={i.name} instance={i} instancePods={instancePods}/>)
                 }
             </Grid>
         </Grid>

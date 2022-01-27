@@ -1,5 +1,5 @@
 import {WithStyles, withStyles} from "@mui/styles";
-import {Application, Environment, Instance, RefBinding} from "../../axios";
+import {Application, Environment, Instance, InstancePod, RefBinding} from "../../axios";
 import {Theme} from "@mui/material/styles";
 import {Card, CardContent, CardHeader} from "@mui/material";
 import ApplicationComponent from "./ApplicationComponent";
@@ -11,6 +11,7 @@ interface EnvironmentProps extends WithStyles<typeof styles> {
     applications: Array<Application>
     refBindings: Array<RefBinding>
     instances: Array<Instance>
+    instancePods: Array<InstancePod>
 }
 
 const styles = (theme: Theme) => ({
@@ -26,7 +27,7 @@ const styles = (theme: Theme) => ({
 })
 
 export default withStyles(styles)(function EnvironmentComponent(props: EnvironmentProps) {
-    const {classes, environment, applications, refBindings, instances} = props
+    const {classes, environment, applications, refBindings, instances, instancePods} = props
     return (
         <Card>
             <CardHeader className={classes.cardHeader} title={environment.name}/>
@@ -37,6 +38,7 @@ export default withStyles(styles)(function EnvironmentComponent(props: Environme
                         application={application}
                         refBinding={refBindings.find(r => r.application === application.name)}
                         instances={instances.filter(i => i.application === application.name)}
+                        instancePods={instancePods.filter(i => i.application === application.name)}
                     />)
                 }
             </CardContent>

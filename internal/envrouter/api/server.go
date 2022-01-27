@@ -32,6 +32,9 @@ type ServerInterface interface {
 	// (GET /api/v1/environments)
 	GetApiV1Environments(c *gin.Context)
 
+	// (GET /api/v1/instancePods)
+	GetApiV1InstancePods(c *gin.Context)
+
 	// (GET /api/v1/instances)
 	GetApiV1Instances(c *gin.Context)
 
@@ -135,6 +138,16 @@ func (siw *ServerInterfaceWrapper) GetApiV1Environments(c *gin.Context) {
 	siw.Handler.GetApiV1Environments(c)
 }
 
+// GetApiV1InstancePods operation middleware
+func (siw *ServerInterfaceWrapper) GetApiV1InstancePods(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetApiV1InstancePods(c)
+}
+
 // GetApiV1Instances operation middleware
 func (siw *ServerInterfaceWrapper) GetApiV1Instances(c *gin.Context) {
 
@@ -205,6 +218,8 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 
 	router.GET(options.BaseURL+"/api/v1/environments", wrapper.GetApiV1Environments)
 
+	router.GET(options.BaseURL+"/api/v1/instancePods", wrapper.GetApiV1InstancePods)
+
 	router.GET(options.BaseURL+"/api/v1/instances", wrapper.GetApiV1Instances)
 
 	router.GET(options.BaseURL+"/api/v1/refBindings", wrapper.GetApiV1RefBindings)
@@ -215,3 +230,4 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 
 	return router
 }
+

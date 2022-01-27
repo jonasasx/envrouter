@@ -26,11 +26,15 @@ func main() {
 
 	deploymentService := k8s.NewDeploymentService(context.TODO(), client)
 
+	podService := k8s.NewPodService(context.TODO(), client)
+
 	applicationService := envrouter.NewApplicationService(deploymentService, dataStorageFactory.NewApplicationStorage(), repositoryService)
 
 	environmentService := envrouter.NewEnvironmentService(deploymentService)
 
 	instanceService := envrouter.NewInstanceService(deploymentService)
+
+	instancePodService := envrouter.NewInstancePodService(podService)
 
 	refService := envrouter.NewRefService(dataStorageFactory.NewRefBindingStorage(), environmentService, applicationService)
 
@@ -45,6 +49,7 @@ func main() {
 		applicationService,
 		environmentService,
 		instanceService,
+		instancePodService,
 		refService,
 	})
 
@@ -60,6 +65,7 @@ type ServerInterfaceImpl struct {
 	applicationService       envrouter.ApplicationService
 	environmentService       envrouter.EnvironmentService
 	instanceService          envrouter.InstanceService
+	instancePodService       envrouter.InstancePodService
 	refService               envrouter.RefService
 }
 
@@ -147,6 +153,16 @@ func (s *ServerInterfaceImpl) GetApiV1Environments(c *gin.Context) {
 
 func (s *ServerInterfaceImpl) GetApiV1Instances(c *gin.Context) {
 	result, err := s.instanceService.FindAll()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	} else {
+		c.IndentedJSON(200, result)
+	}
+}
+
+func (s *ServerInterfaceImpl) GetApiV1InstancePods(c *gin.Context) {
+	result, err := s.instancePodService.FindAll()
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

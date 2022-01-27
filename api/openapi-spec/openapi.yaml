@@ -93,6 +93,37 @@ components:
           type: string
         commitSha:
           type: string
+    InstancePod:
+      type: object
+      required:
+        - name
+        - environment
+        - application
+        - ready
+        - phase
+        - createdTime
+        - started
+      properties:
+        name:
+          type: string
+        environment:
+          type: string
+        application:
+          type: string
+        ref:
+          type: string
+        commitSha:
+          type: string
+        ready:
+          type: boolean
+        phase:
+          type: string
+        createdTime:
+          type: string
+        startedTime:
+          type: string
+        started:
+          type: boolean
 
 paths:
   "/api/v1/repositories":
@@ -197,6 +228,17 @@ paths:
                 "type": "array"
                 "items":
                   "$ref": "#/components/schemas/Instance"
+  "/api/v1/instancePods":
+    get:
+      responses:
+        "200":
+          description: Get list of instances
+          content:
+            "application/json":
+              "schema":
+                "type": "array"
+                "items":
+                  "$ref": "#/components/schemas/InstancePod"
   "/api/v1/refBindings":
     get:
       responses:

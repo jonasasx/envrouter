@@ -13,13 +13,24 @@
  */
 
 
-import { Configuration } from './configuration';
-import globalAxios, { AxiosPromise, AxiosInstance, AxiosRequestConfig } from 'axios';
+import {Configuration} from './configuration';
+import globalAxios, {AxiosInstance, AxiosPromise, AxiosRequestConfig} from 'axios';
 // Some imports not used depending on template conditions
 // @ts-ignore
-import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from './common';
+import {
+    assertParamExists,
+    createRequestFunction,
+    DUMMY_BASE_URL,
+    serializeDataIfNeeded,
+    setApiKeyToObject,
+    setBasicAuthToObject,
+    setBearerAuthToObject,
+    setOAuthToObject,
+    setSearchParams,
+    toPathString
+} from './common';
 // @ts-ignore
-import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } from './base';
+import {BASE_PATH, BaseAPI, COLLECTION_FORMATS, RequestArgs, RequiredError} from './base';
 
 /**
  * 
@@ -149,6 +160,73 @@ export enum InstanceTypeEnum {
     Deployment = 'deployment'
 }
 
+/**
+ * 
+ * @export
+ * @interface InstancePod
+ */
+export interface InstancePod {
+    /**
+     * 
+     * @type {string}
+     * @memberof InstancePod
+     */
+    'name': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InstancePod
+     */
+    'environment': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InstancePod
+     */
+    'application': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InstancePod
+     */
+    'ref'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InstancePod
+     */
+    'commitSha'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof InstancePod
+     */
+    'ready': boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof InstancePod
+     */
+    'phase': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InstancePod
+     */
+    'createdTime': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof InstancePod
+     */
+    'startedTime'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof InstancePod
+     */
+    'started': boolean;
+}
 /**
  * 
  * @export
@@ -401,6 +479,35 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        apiV1InstancePodsGet: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/instancePods`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         apiV1InstancesGet: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/v1/instances`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -590,6 +697,15 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        async apiV1InstancePodsGet(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<InstancePod>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1InstancePodsGet(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         async apiV1InstancesGet(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Instance>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1InstancesGet(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
@@ -684,6 +800,14 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         apiV1EnvironmentsGet(options?: any): AxiosPromise<Array<Environment>> {
             return localVarFp.apiV1EnvironmentsGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1InstancePodsGet(options?: any): AxiosPromise<Array<InstancePod>> {
+            return localVarFp.apiV1InstancePodsGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -791,6 +915,16 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1EnvironmentsGet(options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1EnvironmentsGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1InstancePodsGet(options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1InstancePodsGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
