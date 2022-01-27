@@ -8,6 +8,8 @@ import (
 	"gitlab.com/jonasasx/envrouter/internal/envrouter"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/k8s"
+	"gitlab.com/jonasasx/envrouter/internal/envrouter/utils"
+	"io"
 	"net/http"
 )
 
@@ -18,6 +20,8 @@ func init() {
 func main() {
 	var err error
 	client := k8s.NewClient("")
+	podObserver := utils.NewObserver()
+
 	dataStorageFactory := k8s.NewDataStorageFactory(client)
 
 	repositoryService := envrouter.NewRepositoryService(dataStorageFactory.NewRepositoryStorage())
@@ -27,7 +31,7 @@ func main() {
 	deploymentService, stop := k8s.NewDeploymentService(context.TODO(), client)
 	defer close(stop)
 
-	podService, stop := k8s.NewPodService(context.TODO(), client)
+	podService, stop := k8s.NewPodService(context.TODO(), client, podObserver)
 	defer close(stop)
 
 	applicationService := envrouter.NewApplicationService(deploymentService, dataStorageFactory.NewApplicationStorage(), repositoryService)
@@ -45,7 +49,7 @@ func main() {
 	config.AllowAllOrigins = true
 	router.Use(cors.New(config))
 
-	api.RegisterHandlers(router, &ServerInterfaceImpl{
+	server := &ServerInterfaceImpl{
 		repositoryService,
 		credentialsSecretService,
 		applicationService,
@@ -53,7 +57,11 @@ func main() {
 		instanceService,
 		instancePodService,
 		refService,
-	})
+		podObserver,
+	}
+	router.GET("/api/v1/subscription", server.streamPods)
+
+	api.RegisterHandlers(router, server)
 
 	err = router.Run("0.0.0.0:8080")
 	if err != nil {
@@ -69,6 +77,7 @@ type ServerInterfaceImpl struct {
 	instanceService          envrouter.InstanceService
 	instancePodService       envrouter.InstancePodService
 	refService               envrouter.RefService
+	podObserver              utils.Observer
 }
 
 func (s *ServerInterfaceImpl) GetApiV1Repositories(c *gin.Context) {
@@ -196,4 +205,16 @@ func (s *ServerInterfaceImpl) PostApiV1RefBindings(c *gin.Context) {
 	} else {
 		c.IndentedJSON(200, result)
 	}
+}
+
+func (s *ServerInterfaceImpl) streamPods(c *gin.Context) {
+	subscriber := make(chan utils.ObserverEvent)
+	s.podObserver.Subscribe(&subscriber)
+	defer s.podObserver.Unsubscribe(&subscriber)
+
+	c.Stream(func(w io.Writer) bool {
+		event := <-subscriber
+		c.SSEvent("", event)
+		return true
+	})
 }

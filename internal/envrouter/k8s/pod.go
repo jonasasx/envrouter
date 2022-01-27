@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"gitlab.com/jonasasx/envrouter/internal/envrouter/utils"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
@@ -21,6 +22,7 @@ type podService struct {
 func NewPodService(
 	ctx context.Context,
 	client *client,
+	observer utils.Observer,
 ) (PodService, chan struct{}) {
 	var err error
 	clientset, _, err := client.getK8sClient()
@@ -35,7 +37,26 @@ func NewPodService(
 		watchlist,
 		&v1.Pod{},
 		time.Second*0,
-		cache.ResourceEventHandlerFuncs{},
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				observer.Publish(&utils.ObserverEvent{
+					Item:  obj,
+					Event: "ADD",
+				})
+			},
+			UpdateFunc: func(oldObj interface{}, newObj interface{}) {
+				observer.Publish(&utils.ObserverEvent{
+					Item:  newObj,
+					Event: "UPDATE",
+				})
+			},
+			DeleteFunc: func(obj interface{}) {
+				observer.Publish(&utils.ObserverEvent{
+					Item:  obj,
+					Event: "DELETE",
+				})
+			},
+		},
 	)
 	stop := make(chan struct{})
 	go controller.Run(stop)
