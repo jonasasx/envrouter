@@ -4,38 +4,53 @@ import (
 	"context"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/cache"
+	"time"
 )
 
 type PodService interface {
-	GetAllByLabelExists(labelName string) ([]*v1.Pod, error)
+	GetAll() []*v1.Pod
 }
 
 type podService struct {
 	ctx    context.Context
 	client *client
+	store  cache.Store
 }
 
 func NewPodService(
 	ctx context.Context,
 	client *client,
-) PodService {
+) (PodService, chan struct{}) {
+	var err error
+	clientset, _, err := client.getK8sClient()
+	if err != nil {
+		panic(err)
+	}
+	optionsModifier := func(options *metav1.ListOptions) {
+		options.LabelSelector = ApplicationLabelKey
+	}
+	watchlist := cache.NewFilteredListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", "", optionsModifier)
+	store, controller := cache.NewInformer(
+		watchlist,
+		&v1.Pod{},
+		time.Second*0,
+		cache.ResourceEventHandlerFuncs{},
+	)
+	stop := make(chan struct{})
+	go controller.Run(stop)
 	return &podService{
 		ctx,
 		client,
-	}
+		store,
+	}, stop
 }
 
-func (p *podService) GetAllByLabelExists(labelName string) ([]*v1.Pod, error) {
-	var err error
-	clientset, _, err := p.client.getK8sClient()
-	list, err := clientset.CoreV1().Pods("").List(p.ctx, metav1.ListOptions{LabelSelector: labelName})
-	if err != nil {
-		return nil, err
-	}
+func (p *podService) GetAll() []*v1.Pod {
+	pods := p.store.List()
 	var result []*v1.Pod
-	for _, v := range list.Items {
-		pod := v
-		result = append(result, &pod)
+	for _, pod := range pods {
+		result = append(result, pod.(*v1.Pod))
 	}
-	return result, nil
+	return result
 }

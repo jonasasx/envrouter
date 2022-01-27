@@ -24,9 +24,11 @@ func main() {
 
 	credentialsSecretService := envrouter.NewCredentialsSecretService(dataStorageFactory.NewCredentialsSecretStorage())
 
-	deploymentService := k8s.NewDeploymentService(context.TODO(), client)
+	deploymentService, stop := k8s.NewDeploymentService(context.TODO(), client)
+	defer close(stop)
 
-	podService := k8s.NewPodService(context.TODO(), client)
+	podService, stop := k8s.NewPodService(context.TODO(), client)
+	defer close(stop)
 
 	applicationService := envrouter.NewApplicationService(deploymentService, dataStorageFactory.NewApplicationStorage(), repositoryService)
 

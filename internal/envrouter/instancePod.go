@@ -23,11 +23,7 @@ func NewInstancePodService(
 }
 
 func (i *instancePodService) FindAll() ([]*api.InstancePod, error) {
-	var err error
-	deployments, err := i.podService.GetAllByLabelExists(k8s.ApplicationLabelKey)
-	if err != nil {
-		return nil, err
-	}
+	deployments := i.podService.GetAll()
 	var result []*api.InstancePod
 	for _, v := range deployments {
 		instancePod := mapInstancePod(v)

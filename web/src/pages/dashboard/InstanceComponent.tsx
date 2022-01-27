@@ -22,7 +22,7 @@ export default withStyles(styles)(function InstanceComponent(props: InstanceProp
     const color = "success"
     return (
         <span>
-            <Chip label={instance.name} color={color} variant="outlined" size="small" onClick={() => setOpened(true)}/>
+            <Chip label={`${instance.name}: ${instancePods.length}`} color={color} variant="outlined" size="small" onClick={() => setOpened(true)}/>
             <Dialog
                 open={opened}
                 onClose={() => setOpened(false)}
@@ -32,7 +32,7 @@ export default withStyles(styles)(function InstanceComponent(props: InstanceProp
                 aria-describedby="alert-dialog-description"
             >
                 <DialogTitle id="alert-dialog-title">
-                    {`${instance.name}.${instance.environment}`}: 1
+                    {`${instance.name}.${instance.environment}`}: {instancePods.length}
                 </DialogTitle>
                 <DialogContent dividers={true} className={classes.dialog}>
                     {

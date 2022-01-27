@@ -23,11 +23,7 @@ func NewInstanceService(
 }
 
 func (i *instanceService) FindAll() ([]*api.Instance, error) {
-	var err error
-	deployments, err := i.deploymentService.GetAllByLabelExists(k8s.ApplicationLabelKey)
-	if err != nil {
-		return nil, err
-	}
+	deployments := i.deploymentService.GetAll()
 	var result []*api.Instance
 	for _, v := range deployments {
 		instance := mapInstance(v)

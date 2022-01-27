@@ -4,43 +4,61 @@ import (
 	"context"
 	"k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/cache"
+	"time"
 )
 
 type DeploymentService interface {
-	GetAllByLabelExists(labelName string) ([]*v1.Deployment, error)
-	GetAllInNamespaceByLabelExists(ns string, labelName string) ([]*v1.Deployment, error)
+	GetAll() []*v1.Deployment
+	GetAllInNamespace(ns string) []*v1.Deployment
 }
 
 type deploymentService struct {
 	ctx    context.Context
 	client *client
+	store  cache.Store
 }
 
 func NewDeploymentService(
 	ctx context.Context,
 	client *client,
-) DeploymentService {
+) (DeploymentService, chan struct{}) {
+	var err error
+	clientset, _, err := client.getK8sClient()
+	if err != nil {
+		panic(err)
+	}
+	optionsModifier := func(options *metav1.ListOptions) {
+		options.LabelSelector = ApplicationLabelKey
+	}
+	watchlist := cache.NewFilteredListWatchFromClient(clientset.AppsV1().RESTClient(), "deployments", "", optionsModifier)
+	store, controller := cache.NewInformer(
+		watchlist,
+		&v1.Deployment{},
+		time.Second*0,
+		cache.ResourceEventHandlerFuncs{},
+	)
+	stop := make(chan struct{})
+	go controller.Run(stop)
 	return &deploymentService{
 		ctx,
 		client,
-	}
+		store,
+	}, stop
 }
 
-func (d *deploymentService) GetAllInNamespaceByLabelExists(ns string, labelName string) ([]*v1.Deployment, error) {
-	var err error
-	clientset, _, err := d.client.getK8sClient()
-	list, err := clientset.AppsV1().Deployments(ns).List(d.ctx, metav1.ListOptions{LabelSelector: labelName})
-	if err != nil {
-		return nil, err
-	}
+func (d *deploymentService) GetAllInNamespace(ns string) []*v1.Deployment {
 	var result []*v1.Deployment
-	for _, v := range list.Items {
-		deployment := v
-		result = append(result, &deployment)
+	deployments := d.store.List()
+	for _, v := range deployments {
+		deployment := v.(*v1.Deployment)
+		if ns == "" || ns == deployment.Namespace {
+			result = append(result, deployment)
+		}
 	}
-	return result, nil
+	return result
 }
 
-func (d *deploymentService) GetAllByLabelExists(labelName string) ([]*v1.Deployment, error) {
-	return d.GetAllInNamespaceByLabelExists("", labelName)
+func (d *deploymentService) GetAll() []*v1.Deployment {
+	return d.GetAllInNamespace("")
 }

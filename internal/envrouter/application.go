@@ -33,10 +33,7 @@ func NewApplicationService(
 
 func (a *applicationService) FindAll() ([]*api.Application, error) {
 	var err error
-	deployments, err := a.deploymentService.GetAllByLabelExists(k8s.ApplicationLabelKey)
-	if err != nil {
-		return nil, err
-	}
+	deployments := a.deploymentService.GetAll()
 	applicationNames := map[string]bool{}
 	for _, v := range deployments {
 		if applicationName, ok := v.Labels[k8s.ApplicationLabelKey]; ok {
@@ -82,11 +79,7 @@ func (a *applicationService) Save(application *api.Application) (*api.Applicatio
 }
 
 func (a *applicationService) ExistsByName(name string) bool {
-	var err error
-	deployments, err := a.deploymentService.GetAllByLabelExists(k8s.ApplicationLabelKey)
-	if err != nil {
-		return false
-	}
+	deployments := a.deploymentService.GetAll()
 	for _, v := range deployments {
 		if applicationName, ok := v.Labels[k8s.ApplicationLabelKey]; ok {
 			if applicationName == name {
