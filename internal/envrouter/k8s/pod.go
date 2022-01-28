@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"context"
-	"gitlab.com/jonasasx/envrouter/internal/envrouter/utils"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
@@ -19,10 +18,25 @@ type podService struct {
 	store  cache.Store
 }
 
+type PodEventHandler struct {
+	AddFunc    func(obj *v1.Pod)
+	UpdateFunc func(oldObj, newObj *v1.Pod)
+	DeleteFunc func(obj *v1.Pod)
+}
+
+func NewPodServiceFactoryMethod(
+	ctx context.Context,
+	client *client,
+) func(*PodEventHandler) (PodService, chan struct{}) {
+	return func(handler *PodEventHandler) (PodService, chan struct{}) {
+		return NewPodService(ctx, client, handler)
+	}
+}
+
 func NewPodService(
 	ctx context.Context,
 	client *client,
-	observer utils.Observer,
+	handler *PodEventHandler,
 ) (PodService, chan struct{}) {
 	var err error
 	clientset, _, err := client.getK8sClient()
@@ -39,22 +53,19 @@ func NewPodService(
 		time.Second*0,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				observer.Publish(&utils.ObserverEvent{
-					Item:  obj,
-					Event: "ADD",
-				})
+				if handler != nil {
+					handler.AddFunc(obj.(*v1.Pod))
+				}
 			},
 			UpdateFunc: func(oldObj interface{}, newObj interface{}) {
-				observer.Publish(&utils.ObserverEvent{
-					Item:  newObj,
-					Event: "UPDATE",
-				})
+				if handler != nil {
+					handler.UpdateFunc(oldObj.(*v1.Pod), newObj.(*v1.Pod))
+				}
 			},
 			DeleteFunc: func(obj interface{}) {
-				observer.Publish(&utils.ObserverEvent{
-					Item:  obj,
-					Event: "DELETE",
-				})
+				if handler != nil {
+					handler.DeleteFunc(obj.(*v1.Pod))
+				}
 			},
 		},
 	)

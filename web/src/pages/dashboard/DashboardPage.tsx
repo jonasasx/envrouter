@@ -2,6 +2,7 @@ import {Grid} from "@mui/material";
 import {useEffect, useState} from "react";
 import {Application, DefaultApiFp, Environment, Instance, InstancePod, RefBinding} from "../../axios";
 import EnvironmentComponent from "./EnvironmentComponent";
+import {PodEvent} from "../../sse/api";
 
 const api = DefaultApiFp()
 
@@ -12,8 +13,34 @@ export default function DashboardPage() {
     const [instances, setInstances] = useState<Array<Instance>>([])
     const [instancePods, setInstancePods] = useState<Array<InstancePod>>([])
 
-    useEffect(() => {
+    const onPodEvent: ((e: PodEvent) => void) = e => {
+        const instancePod = e.item
 
+        setInstancePods((currentInstancePods: Array<InstancePod>) => {
+            const index = currentInstancePods.findIndex(i => i.name === instancePod.name)
+            console.log('Event: ', e.event, '; Index: ', index, '; Name: ', instancePod.name, '; Phase: ', instancePod.phase)
+            switch (e.event) {
+                case "UPDATED":
+                    if (index === -1) {
+                        return [...currentInstancePods, instancePod]
+                    }
+                    return [
+                        ...currentInstancePods.slice(0, index),
+                        instancePod,
+                        ...currentInstancePods.slice(index + 1)
+                    ]
+                case "DELETED":
+                    return [
+                        ...currentInstancePods.slice(0, index),
+                        ...currentInstancePods.slice(index + 1)
+                    ]
+            }
+        })
+    }
+
+    useEffect(() => {
+        const eventSource = new EventSource('http://localhost:8080/api/v1/subscription')
+        eventSource.onmessage = e => onPodEvent(JSON.parse(e.data) as PodEvent)
         Promise.all([
             api.apiV1EnvironmentsGet().then(request => request()),
             api.apiV1ApplicationsGet().then(request => request()),
@@ -21,14 +48,15 @@ export default function DashboardPage() {
             api.apiV1InstancesGet().then(request => request()),
             api.apiV1InstancePodsGet().then(request => request())
         ]).then(([envs, apps, refs, instances, instancePods]) => {
-            setEnvironments(envs.data);
-            setApplications(apps.data);
             setRefBindings(refs.data);
+            setEnvironments(envs.data.sort((a, b) => a.name.localeCompare(b.name)));
+            setApplications(apps.data.sort((a, b) => a.name.localeCompare(b.name)));
             setInstances(instances.data);
-            setInstancePods(instancePods.data)
+            setInstancePods(instancePods.data.sort((a, b) => a.createdTime.localeCompare(b.createdTime)))
         })
 
         return () => {
+            eventSource.close()
         }
     }, [])
 

@@ -3,7 +3,9 @@ package envrouter
 import (
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/k8s"
+	"gitlab.com/jonasasx/envrouter/internal/envrouter/utils"
 	v1 "k8s.io/api/core/v1"
+	"reflect"
 )
 
 type InstancePodService interface {
@@ -15,11 +17,37 @@ type instancePodService struct {
 }
 
 func NewInstancePodService(
-	podService k8s.PodService,
-) InstancePodService {
+	podServiceFactoryMethod func(*k8s.PodEventHandler) (k8s.PodService, chan struct{}),
+	observer utils.Observer,
+) (InstancePodService, chan struct{}) {
+	handler := &k8s.PodEventHandler{
+		AddFunc: func(obj *v1.Pod) {
+			observer.Publish(&utils.ObserverEvent{
+				Item:  mapInstancePod(obj),
+				Event: "UPDATED",
+			})
+		},
+		UpdateFunc: func(oldObj, newObj *v1.Pod) {
+			oldPod := mapInstancePod(oldObj)
+			newPod := mapInstancePod(newObj)
+			if !reflect.DeepEqual(oldPod, newPod) {
+				observer.Publish(&utils.ObserverEvent{
+					Item:  newPod,
+					Event: "UPDATED",
+				})
+			}
+		},
+		DeleteFunc: func(obj *v1.Pod) {
+			observer.Publish(&utils.ObserverEvent{
+				Item:  mapInstancePod(obj),
+				Event: "DELETED",
+			})
+		},
+	}
+	podService, stop := podServiceFactoryMethod(handler)
 	return &instancePodService{
 		podService,
-	}
+	}, stop
 }
 
 func (i *instancePodService) FindAll() ([]*api.InstancePod, error) {

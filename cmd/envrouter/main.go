@@ -20,7 +20,6 @@ func init() {
 func main() {
 	var err error
 	client := k8s.NewClient("")
-	podObserver := utils.NewObserver()
 
 	dataStorageFactory := k8s.NewDataStorageFactory(client)
 
@@ -31,8 +30,7 @@ func main() {
 	deploymentService, stop := k8s.NewDeploymentService(context.TODO(), client)
 	defer close(stop)
 
-	podService, stop := k8s.NewPodService(context.TODO(), client, podObserver)
-	defer close(stop)
+	podServiceFactoryMethod := k8s.NewPodServiceFactoryMethod(context.TODO(), client)
 
 	applicationService := envrouter.NewApplicationService(deploymentService, dataStorageFactory.NewApplicationStorage(), repositoryService)
 
@@ -40,7 +38,9 @@ func main() {
 
 	instanceService := envrouter.NewInstanceService(deploymentService)
 
-	instancePodService := envrouter.NewInstancePodService(podService)
+	instancePodObserver := utils.NewObserver()
+	instancePodService, stop := envrouter.NewInstancePodService(podServiceFactoryMethod, instancePodObserver)
+	defer close(stop)
 
 	refService := envrouter.NewRefService(dataStorageFactory.NewRefBindingStorage(), environmentService, applicationService)
 
@@ -57,7 +57,7 @@ func main() {
 		instanceService,
 		instancePodService,
 		refService,
-		podObserver,
+		instancePodObserver,
 	}
 	router.GET("/api/v1/subscription", server.streamPods)
 
@@ -77,7 +77,7 @@ type ServerInterfaceImpl struct {
 	instanceService          envrouter.InstanceService
 	instancePodService       envrouter.InstancePodService
 	refService               envrouter.RefService
-	podObserver              utils.Observer
+	instancePodObserver      utils.Observer
 }
 
 func (s *ServerInterfaceImpl) GetApiV1Repositories(c *gin.Context) {
@@ -209,8 +209,8 @@ func (s *ServerInterfaceImpl) PostApiV1RefBindings(c *gin.Context) {
 
 func (s *ServerInterfaceImpl) streamPods(c *gin.Context) {
 	subscriber := make(chan utils.ObserverEvent)
-	s.podObserver.Subscribe(&subscriber)
-	defer s.podObserver.Unsubscribe(&subscriber)
+	s.instancePodObserver.Subscribe(&subscriber)
+	defer s.instancePodObserver.Unsubscribe(&subscriber)
 
 	c.Stream(func(w io.Writer) bool {
 		event := <-subscriber
