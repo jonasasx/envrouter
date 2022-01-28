@@ -46,6 +46,12 @@ type ServerInterface interface {
 	// Get all repositories
 	// (GET /api/v1/repositories)
 	GetApiV1Repositories(c *gin.Context)
+
+	// (POST /api/v1/repositories)
+	PostApiV1Repositories(c *gin.Context)
+
+	// (DELETE /api/v1/repositories/{name})
+	DeleteApiV1RepositoriesName(c *gin.Context, name string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -188,6 +194,37 @@ func (siw *ServerInterfaceWrapper) GetApiV1Repositories(c *gin.Context) {
 	siw.Handler.GetApiV1Repositories(c)
 }
 
+// PostApiV1Repositories operation middleware
+func (siw *ServerInterfaceWrapper) PostApiV1Repositories(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostApiV1Repositories(c)
+}
+
+// DeleteApiV1RepositoriesName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteApiV1RepositoriesName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameter("simple", false, "name", c.Param("name"), &name)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteApiV1RepositoriesName(c, name)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL     string
@@ -227,6 +264,10 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 	router.POST(options.BaseURL+"/api/v1/refBindings", wrapper.PostApiV1RefBindings)
 
 	router.GET(options.BaseURL+"/api/v1/repositories", wrapper.GetApiV1Repositories)
+
+	router.POST(options.BaseURL+"/api/v1/repositories", wrapper.PostApiV1Repositories)
+
+	router.DELETE(options.BaseURL+"/api/v1/repositories/:name", wrapper.DeleteApiV1RepositoriesName)
 
 	return router
 }

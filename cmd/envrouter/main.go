@@ -90,6 +90,29 @@ func (s *ServerInterfaceImpl) GetApiV1Repositories(c *gin.Context) {
 	}
 }
 
+func (s *ServerInterfaceImpl) PostApiV1Repositories(c *gin.Context) {
+	var json api.Repository
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	result, err := s.repositoryService.Save(&json)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	} else {
+		c.IndentedJSON(200, result)
+	}
+}
+
+func (s *ServerInterfaceImpl) DeleteApiV1RepositoriesName(c *gin.Context, name string) {
+	err := s.repositoryService.DeleteByName(name)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+}
+
 func (s *ServerInterfaceImpl) GetApiV1CredentialsSecrets(c *gin.Context) {
 	result, err := s.credentialsSecretService.FindAll()
 	if err != nil {

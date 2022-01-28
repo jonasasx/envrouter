@@ -20,6 +20,8 @@ components:
           type: string
         credentialsSecret:
           type: string
+        isNew:
+          type: boolean
     CredentialsSecretListItem:
       type: object
       required:
@@ -138,6 +140,31 @@ paths:
                 "type": "array"
                 "items":
                   "$ref": "#/components/schemas/Repository"
+    post:
+      description: Create Credential secret
+      requestBody:
+        content:
+          "application/json":
+            "schema":
+              "$ref": "#/components/schemas/Repository"
+      responses:
+        "201":
+          description: Success
+          content:
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Repository"
+  "/api/v1/repositories/{name}":
+    delete:
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        "204":
+          description: Success
   "/api/v1/credentialsSecrets":
     get:
       responses:

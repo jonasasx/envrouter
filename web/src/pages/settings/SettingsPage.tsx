@@ -1,9 +1,12 @@
-import {Grid} from "@mui/material";
+import {useState} from "react";
+import {Repository} from "../../axios";
+import RepositoryGridComponent from "./RepositoryGridComponent";
 
 export default function SettingsPage() {
+    const [repositories, setRepositories] = useState<Array<Repository>>([])
     return (
-        <Grid container spacing={2}>
-            123
-        </Grid>
+        <div>
+            <RepositoryGridComponent onRepositoriesUpdate={repositories => setRepositories(repositories)}/>
+        </div>
     )
 }

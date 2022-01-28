@@ -69,6 +69,7 @@ type RefBinding struct {
 // Repository defines model for Repository.
 type Repository struct {
 	CredentialsSecret string `json:"credentialsSecret"`
+	IsNew             *bool  `json:"isNew,omitempty"`
 	Name              string `json:"name"`
 	Url               string `json:"url"`
 }
@@ -82,6 +83,9 @@ type PostApiV1CredentialsSecretsJSONBody CredentialsSecretRequest
 // PostApiV1RefBindingsJSONBody defines parameters for PostApiV1RefBindings.
 type PostApiV1RefBindingsJSONBody RefBinding
 
+// PostApiV1RepositoriesJSONBody defines parameters for PostApiV1Repositories.
+type PostApiV1RepositoriesJSONBody Repository
+
 // PutApiV1ApplicationsNameJSONRequestBody defines body for PutApiV1ApplicationsName for application/json ContentType.
 type PutApiV1ApplicationsNameJSONRequestBody PutApiV1ApplicationsNameJSONBody
 
@@ -90,4 +94,7 @@ type PostApiV1CredentialsSecretsJSONRequestBody PostApiV1CredentialsSecretsJSONB
 
 // PostApiV1RefBindingsJSONRequestBody defines body for PostApiV1RefBindings for application/json ContentType.
 type PostApiV1RefBindingsJSONRequestBody PostApiV1RefBindingsJSONBody
+
+// PostApiV1RepositoriesJSONRequestBody defines body for PostApiV1Repositories for application/json ContentType.
+type PostApiV1RepositoriesJSONRequestBody PostApiV1RepositoriesJSONBody
 

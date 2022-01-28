@@ -7,7 +7,7 @@ import (
 )
 
 type RepositoryService interface {
-	Save(repository *api.Repository) error
+	Save(repository *api.Repository) (*api.Repository, error)
 	FindByName(repositoryName string) (*api.Repository, error)
 	FindAll() ([]*api.Repository, error)
 	DeleteByName(repositoryName string) error
@@ -24,12 +24,12 @@ func NewRepositoryService(
 	return &repositoryService{dataStorage: dataStorage}
 }
 
-func (r *repositoryService) Save(repository *api.Repository) error {
+func (r *repositoryService) Save(repository *api.Repository) (*api.Repository, error) {
 	value, err := yaml.Marshal(repository)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return r.dataStorage.Save(repository.Name, string(value))
+	return repository, r.dataStorage.Save(repository.Name, string(value))
 }
 
 func (r *repositoryService) FindByName(repositoryName string) (*api.Repository, error) {

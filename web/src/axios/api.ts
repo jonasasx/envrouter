@@ -276,6 +276,12 @@ export interface Repository {
      * @memberof Repository
      */
     'credentialsSecret': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Repository
+     */
+    'isNew'?: boolean;
 }
 
 /**
@@ -624,6 +630,72 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1RepositoriesNameDelete: async (name: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'name' is not null or undefined
+            assertParamExists('apiV1RepositoriesNameDelete', 'name', name)
+            const localVarPath = `/api/v1/repositories/{name}`
+                .replace(`{${"name"}}`, encodeURIComponent(String(name)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Create Credential secret
+         * @param {Repository} [repository] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1RepositoriesPost: async (repository?: Repository, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/repositories`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(repository, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -739,6 +811,26 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1RepositoriesGet(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
+        /**
+         * 
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1RepositoriesNameDelete(name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1RepositoriesNameDelete(name, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * Create Credential secret
+         * @param {Repository} [repository] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1RepositoriesPost(repository?: Repository, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Repository>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1RepositoriesPost(repository, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
     }
 };
 
@@ -842,6 +934,24 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         apiV1RepositoriesGet(options?: any): AxiosPromise<Array<Repository>> {
             return localVarFp.apiV1RepositoriesGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} name 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1RepositoriesNameDelete(name: string, options?: any): AxiosPromise<void> {
+            return localVarFp.apiV1RepositoriesNameDelete(name, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Create Credential secret
+         * @param {Repository} [repository] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1RepositoriesPost(repository?: Repository, options?: any): AxiosPromise<Repository> {
+            return localVarFp.apiV1RepositoriesPost(repository, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -967,6 +1077,28 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1RepositoriesGet(options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1RepositoriesGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} name 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1RepositoriesNameDelete(name: string, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1RepositoriesNameDelete(name, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Create Credential secret
+     * @param {Repository} [repository] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1RepositoriesPost(repository?: Repository, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1RepositoriesPost(repository, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
