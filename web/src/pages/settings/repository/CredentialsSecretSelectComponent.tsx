@@ -3,7 +3,7 @@ import * as React from "react";
 import {useEffect, useState} from "react";
 import {OptionsObject, useSnackbar} from "notistack";
 import NewCredentialsSecretComponent from "./NewCredentialsSecretComponent";
-import {CredentialsSecretListItem, DefaultApiFp} from "../../axios";
+import {CredentialsSecretListItem, DefaultApiFp} from "../../../axios";
 
 interface CredentialsSecretSelectProps {
     secret: string

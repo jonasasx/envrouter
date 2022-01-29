@@ -3,7 +3,7 @@ import Button from "@mui/material/Button";
 import * as React from "react";
 import {useState} from "react";
 import {useSnackbar} from "notistack";
-import {DefaultApiFp, Repository} from "../../axios";
+import {DefaultApiFp, Repository} from "../../../axios";
 import {withStyles, WithStyles} from "@mui/styles";
 import {Theme} from "@mui/material/styles";
 import CredentialsSecretSelectComponent from "./CredentialsSecretSelectComponent";

@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {Repository} from "../../axios";
-import RepositoryGridComponent from "./RepositoryGridComponent";
+import RepositoryGridComponent from "./repository/RepositoryGridComponent";
 
 export default function SettingsPage() {
     const [repositories, setRepositories] = useState<Array<Repository>>([])

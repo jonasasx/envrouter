@@ -4,7 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import {useEffect, useState} from "react";
-import {DefaultApiFp, Repository} from "../../axios";
+import {DefaultApiFp, Repository} from "../../../axios";
 import {OptionsObject, useSnackbar} from "notistack";
 import {WithStyles, withStyles} from "@mui/styles";
 import {Theme} from "@mui/material/styles";

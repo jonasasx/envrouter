@@ -3,7 +3,7 @@ import * as React from "react";
 import {useState} from "react";
 import Button from "@mui/material/Button";
 import {useSnackbar} from "notistack";
-import {CredentialsSecretListItem, CredentialsSecretRequest, DefaultApiFp} from "../../axios";
+import {CredentialsSecretListItem, CredentialsSecretRequest, DefaultApiFp} from "../../../axios";
 
 interface NewCredentialsSecretProps {
     onClose: (secret: CredentialsSecretListItem | undefined) => void
