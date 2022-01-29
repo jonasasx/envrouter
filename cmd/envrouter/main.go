@@ -65,6 +65,9 @@ func main() {
 		instancePodObserver,
 	}
 	router.GET("/api/v1/subscription", server.streamPods)
+	router.GET("/healthz", func(c *gin.Context) {
+		c.Data(200, "text/plain", []byte("ok"))
+	})
 	router.Use(static.Serve("/", static.LocalFile("./public", true)))
 
 	api.RegisterHandlers(router, server)
