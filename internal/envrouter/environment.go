@@ -3,6 +3,7 @@ package envrouter
 import (
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/k8s"
+	"sort"
 )
 
 type EnvironmentService interface {
@@ -33,6 +34,9 @@ func (e *environmentService) FindAll() ([]*api.Environment, error) {
 		environment := api.Environment{Name: k}
 		result = append(result, &environment)
 	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name < result[j].Name
+	})
 	return result, nil
 }
 

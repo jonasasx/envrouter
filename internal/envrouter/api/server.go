@@ -39,7 +39,7 @@ type ServerInterface interface {
 	GetApiV1Instances(c *gin.Context)
 
 	// (GET /api/v1/refBindings)
-	GetApiV1RefBindings(c *gin.Context)
+	GetApiV1RefBindings(c *gin.Context, params GetApiV1RefBindingsParams)
 
 	// (POST /api/v1/refBindings)
 	PostApiV1RefBindings(c *gin.Context)
@@ -167,11 +167,49 @@ func (siw *ServerInterfaceWrapper) GetApiV1Instances(c *gin.Context) {
 // GetApiV1RefBindings operation middleware
 func (siw *ServerInterfaceWrapper) GetApiV1RefBindings(c *gin.Context) {
 
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetApiV1RefBindingsParams
+
+	// ------------- Optional query parameter "application" -------------
+	if paramValue := c.Query("application"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "application", c.Request.URL.Query(), &params.Application)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter application: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "environment" -------------
+	if paramValue := c.Query("environment"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "environment", c.Request.URL.Query(), &params.Environment)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter environment: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "ref" -------------
+	if paramValue := c.Query("ref"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "ref", c.Request.URL.Query(), &params.Ref)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter ref: %s", err)})
+		return
+	}
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
 
-	siw.Handler.GetApiV1RefBindings(c)
+	siw.Handler.GetApiV1RefBindings(c, params)
 }
 
 // PostApiV1RefBindings operation middleware

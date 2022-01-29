@@ -4,6 +4,7 @@ import (
 	"github.com/ghodss/yaml"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/k8s"
+	"sort"
 )
 
 type RepositoryService interface {
@@ -59,6 +60,9 @@ func (r *repositoryService) FindAll() ([]*api.Repository, error) {
 		}
 		result = append(result, &item)
 	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name < result[j].Name
+	})
 	return result, nil
 }
 

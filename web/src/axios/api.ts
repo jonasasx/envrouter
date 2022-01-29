@@ -50,6 +50,12 @@ export interface Application {
      * @memberof Application
      */
     'repositoryName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Application
+     */
+    'webhook'?: string;
 }
 /**
  * 
@@ -540,10 +546,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {string} [application] 
+         * @param {string} [environment] 
+         * @param {string} [ref] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1RefBindingsGet: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiV1RefBindingsGet: async (application?: string, environment?: string, ref?: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/v1/refBindings`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -555,6 +564,18 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            if (application !== undefined) {
+                localVarQueryParameter['application'] = application;
+            }
+
+            if (environment !== undefined) {
+                localVarQueryParameter['environment'] = environment;
+            }
+
+            if (ref !== undefined) {
+                localVarQueryParameter['ref'] = ref;
+            }
 
 
     
@@ -784,11 +805,14 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {string} [application] 
+         * @param {string} [environment] 
+         * @param {string} [ref] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1RefBindingsGet(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<RefBinding>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1RefBindingsGet(options);
+        async apiV1RefBindingsGet(application?: string, environment?: string, ref?: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<RefBinding>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1RefBindingsGet(application, environment, ref, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -911,11 +935,14 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
+         * @param {string} [application] 
+         * @param {string} [environment] 
+         * @param {string} [ref] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1RefBindingsGet(options?: any): AxiosPromise<Array<RefBinding>> {
-            return localVarFp.apiV1RefBindingsGet(options).then((request) => request(axios, basePath));
+        apiV1RefBindingsGet(application?: string, environment?: string, ref?: string, options?: any): AxiosPromise<Array<RefBinding>> {
+            return localVarFp.apiV1RefBindingsGet(application, environment, ref, options).then((request) => request(axios, basePath));
         },
         /**
          * Create RefBinding
@@ -1049,12 +1076,15 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
+     * @param {string} [application] 
+     * @param {string} [environment] 
+     * @param {string} [ref] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiV1RefBindingsGet(options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1RefBindingsGet(options).then((request) => request(this.axios, this.basePath));
+    public apiV1RefBindingsGet(application?: string, environment?: string, ref?: string, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1RefBindingsGet(application, environment, ref, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

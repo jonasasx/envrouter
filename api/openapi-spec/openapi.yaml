@@ -54,6 +54,8 @@ components:
           type: string
         repositoryName:
           type: string
+        webhook:
+          type: string
     Environment:
       type: object
       required:
@@ -268,6 +270,19 @@ paths:
                   "$ref": "#/components/schemas/InstancePod"
   "/api/v1/refBindings":
     get:
+      parameters:
+        - in: query
+          name: application
+          schema:
+            type: string
+        - in: query
+          name: environment
+          schema:
+            type: string
+        - in: query
+          name: ref
+          schema:
+            type: string
       responses:
         "200":
           description: Get list of RefBinding

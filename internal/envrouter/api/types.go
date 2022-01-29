@@ -12,6 +12,7 @@ const (
 type Application struct {
 	Name           string  `json:"name"`
 	RepositoryName *string `json:"repositoryName,omitempty"`
+	Webhook        *string `json:"webhook,omitempty"`
 }
 
 // CredentialsSecretListItem defines model for CredentialsSecretListItem.
@@ -79,6 +80,13 @@ type PutApiV1ApplicationsNameJSONBody Application
 
 // PostApiV1CredentialsSecretsJSONBody defines parameters for PostApiV1CredentialsSecrets.
 type PostApiV1CredentialsSecretsJSONBody CredentialsSecretRequest
+
+// GetApiV1RefBindingsParams defines parameters for GetApiV1RefBindings.
+type GetApiV1RefBindingsParams struct {
+	Application *string `json:"application,omitempty"`
+	Environment *string `json:"environment,omitempty"`
+	Ref         *string `json:"ref,omitempty"`
+}
 
 // PostApiV1RefBindingsJSONBody defines parameters for PostApiV1RefBindings.
 type PostApiV1RefBindingsJSONBody RefBinding

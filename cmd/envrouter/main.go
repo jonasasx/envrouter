@@ -205,8 +205,8 @@ func (s *ServerInterfaceImpl) GetApiV1InstancePods(c *gin.Context) {
 	}
 }
 
-func (s *ServerInterfaceImpl) GetApiV1RefBindings(c *gin.Context) {
-	result, err := s.refService.FindAllBindings()
+func (s *ServerInterfaceImpl) GetApiV1RefBindings(c *gin.Context, params api.GetApiV1RefBindingsParams) {
+	result, err := s.refService.FindAllBindings(params.Environment, params.Application, params.Ref)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

@@ -5,6 +5,7 @@ import (
 	"github.com/ghodss/yaml"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/k8s"
+	"sort"
 )
 
 type ApplicationService interface {
@@ -60,6 +61,9 @@ func (a *applicationService) FindAll() ([]*api.Application, error) {
 
 		result = append(result, application)
 	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name < result[j].Name
+	})
 	return result, nil
 }
 
