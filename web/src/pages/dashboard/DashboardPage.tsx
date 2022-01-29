@@ -38,6 +38,19 @@ export default function DashboardPage() {
         })
     }
 
+    const updateRefBindingChanged = (newRefBinding: RefBinding) => {
+        setRefBindings(currentRefBindings => {
+            const index = refBindings.findIndex(r => r.environment === newRefBinding.environment && r.application === newRefBinding.application)
+            return (index === -1) &&
+                [...currentRefBindings, newRefBinding] ||
+                [
+                    ...currentRefBindings.slice(0, index),
+                    newRefBinding,
+                    ...currentRefBindings.slice(index + 1)
+                ]
+        })
+    }
+
     useEffect(() => {
         const eventSource = new EventSource('http://localhost:8080/api/v1/subscription')
         eventSource.onmessage = e => onPodEvent(JSON.parse(e.data) as PodEvent)
@@ -73,6 +86,7 @@ export default function DashboardPage() {
                             refBindings={refBindings.filter(r => r.environment === environment.name)}
                             instances={instances.filter(i => i.environment === environment.name)}
                             instancePods={instancePods.filter(i => i.environment === environment.name)}
+                            onRefBindingChanged={refBinding => updateRefBindingChanged(refBinding)}
                         />
                     </Grid>
                 )

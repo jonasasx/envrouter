@@ -12,6 +12,7 @@ interface EnvironmentProps extends WithStyles<typeof styles> {
     refBindings: Array<RefBinding>
     instances: Array<Instance>
     instancePods: Array<InstancePod>
+    onRefBindingChanged: (refBinding: RefBinding) => void
 }
 
 const styles = (theme: Theme) => ({
@@ -27,7 +28,7 @@ const styles = (theme: Theme) => ({
 })
 
 export default withStyles(styles)(function EnvironmentComponent(props: EnvironmentProps) {
-    const {classes, environment, applications, refBindings, instances, instancePods} = props
+    const {classes, environment, applications, refBindings, instances, instancePods, onRefBindingChanged} = props
     return (
         <Card>
             <CardHeader className={classes.cardHeader} title={environment.name}/>
@@ -39,6 +40,7 @@ export default withStyles(styles)(function EnvironmentComponent(props: Environme
                         refBinding={refBindings.find(r => r.application === application.name)}
                         instances={instances.filter(i => i.application === application.name)}
                         instancePods={instancePods.filter(i => i.application === application.name)}
+                        onRefBindingChanged={refBinding => onRefBindingChanged(refBinding)}
                     />)
                 }
             </CardContent>
