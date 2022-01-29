@@ -27,8 +27,7 @@ server:
   stage: build
   image: golang:alpine
   script:
-    - cd server
-    - go build
+    - go build cmd/envrouter/main.go
   artifacts:
     paths:
       - server/envrouter
