@@ -59,6 +59,9 @@ func (d *configMapDataStorage) Save(key string, data string) error {
 		}
 		configmap.Data = make(map[string]string)
 	}
+	if configmap.Data == nil {
+		configmap.Data = make(map[string]string)
+	}
 
 	configmap.Data[key] = data
 
