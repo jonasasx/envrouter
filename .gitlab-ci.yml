@@ -30,7 +30,7 @@ server:
     - go build cmd/envrouter/main.go
   artifacts:
     paths:
-      - server/envrouter
+      - main
   dependencies: []
 
 helm build:
