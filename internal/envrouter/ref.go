@@ -17,17 +17,20 @@ type refService struct {
 	dataStorage        k8s.ConfigMapDataStorage
 	environmentService EnvironmentService
 	applicationService ApplicationService
+	deployService      DeployService
 }
 
 func NewRefService(
 	dataStorage k8s.ConfigMapDataStorage,
 	environmentService EnvironmentService,
 	applicationService ApplicationService,
+	deployService DeployService,
 ) RefService {
 	return &refService{
 		dataStorage,
 		environmentService,
 		applicationService,
+		deployService,
 	}
 }
 
@@ -42,7 +45,12 @@ func (r *refService) SaveBinding(refBinding *api.RefBinding) (*api.RefBinding, e
 	if err != nil {
 		return nil, err
 	}
-	return refBinding, r.dataStorage.Save(refBinding.Environment+"-"+refBinding.Application, string(value))
+	err = r.dataStorage.Save(refBinding.Environment+"-"+refBinding.Application, string(value))
+	if err != nil {
+		return nil, err
+	}
+	err = r.deployService.Deploy(refBinding.Application, refBinding.Ref)
+	return refBinding, err
 }
 
 func (r *refService) FindAllBindings(environmentFilter *string, applicationFilter *string, refFilter *string) ([]*api.RefBinding, error) {

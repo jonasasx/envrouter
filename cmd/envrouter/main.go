@@ -42,7 +42,11 @@ func main() {
 	instancePodService, stop := envrouter.NewInstancePodService(podServiceFactoryMethod, instancePodObserver)
 	defer close(stop)
 
-	refService := envrouter.NewRefService(dataStorageFactory.NewRefBindingStorage(), environmentService, applicationService)
+	webhookService := envrouter.NewWebhookService()
+
+	deployService := envrouter.NewDeployService(applicationService, webhookService)
+
+	refService := envrouter.NewRefService(dataStorageFactory.NewRefBindingStorage(), environmentService, applicationService, deployService)
 
 	router := gin.Default()
 	config := cors.DefaultConfig()

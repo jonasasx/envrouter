@@ -22,7 +22,7 @@ export default withStyles(styles)(function InstanceComponent(props: InstanceProp
     const color = "success"
     return (
         <span>
-            <Chip label={`${instance.name}: ${instancePods.length}`} color={color} variant="outlined" size="small" onClick={() => setOpened(true)}/>
+            <Chip label={`${instance.name}: ${instancePods.length}, ${instance.ref}`} color={color} variant="outlined" size="small" onClick={() => setOpened(true)}/>
             <Dialog
                 open={opened}
                 onClose={() => setOpened(false)}

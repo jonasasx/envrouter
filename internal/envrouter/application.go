@@ -10,6 +10,7 @@ import (
 
 type ApplicationService interface {
 	FindAll() ([]*api.Application, error)
+	FindByName(name string) (*api.Application, error)
 	Save(a *api.Application) (*api.Application, error)
 	ExistsByName(name string) bool
 }
@@ -65,6 +66,33 @@ func (a *applicationService) FindAll() ([]*api.Application, error) {
 		return result[i].Name < result[j].Name
 	})
 	return result, nil
+}
+
+func (a *applicationService) FindByName(name string) (*api.Application, error) {
+	var err error
+	var application *api.Application
+	applicationConfigs, err := a.applicationStorage.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	if config, ok := applicationConfigs[name]; ok {
+		application, err = unmarshallApplicationConfig(config)
+		if err != nil {
+			return nil, err
+		}
+		application.Name = name
+	}
+	if application == nil {
+		deployments := a.deploymentService.GetAll()
+		for _, v := range deployments {
+			if applicationName, ok := v.Labels[k8s.ApplicationLabelKey]; ok {
+				application = &api.Application{
+					Name: applicationName,
+				}
+			}
+		}
+	}
+	return application, nil
 }
 
 func (a *applicationService) Save(application *api.Application) (*api.Application, error) {
