@@ -1,0 +1,82 @@
+stages:
+  - web
+  - build
+  - docker
+  - publish
+
+variables:
+  VERSION: "v0.1"
+  HELM_VERSION: "0.1.0"
+
+web:
+  stage: web
+  image: node:12-alpine
+  script:
+    - unset CI
+    - cd web
+    - npm i
+    - npm run build
+  artifacts:
+    paths:
+      - web/build
+  dependencies: []
+
+server:
+  variables:
+    GIN_MODE: release
+  stage: build
+  image: golang:alpine
+  script:
+    - cd server
+    - go build
+  artifacts:
+    paths:
+      - server/envrouter
+  dependencies: []
+
+helm build:
+  stage: build
+  image:
+    name: alpine/helm:3.6.3
+    entrypoint: [""]
+  script:
+    - mkdir -p ./public/charts
+    - helm package helm/* --destination ./public/charts
+    - helm repo index --url https://${CI_PROJECT_NAMESPACE}.gitlab.io/${CI_PROJECT_NAME}/charts ./public/charts
+  artifacts:
+    paths:
+      - ./public/charts
+  dependencies: []
+
+helm publish:
+  stage: publish
+  image: curlimages/curl:latest
+  script:
+    - 'curl --request POST --user gitlab-ci-token:$CI_JOB_TOKEN --form "chart=@./public/charts/envrouter-$HELM_VERSION.tgz" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/stable/charts"'
+  dependencies:
+    - helm build
+
+pages:
+  stage: publish
+  image: alpine
+  script:
+    - ls -l public/charts
+  artifacts:
+    paths:
+      - ./public
+  dependencies:
+    - helm build
+
+docker:
+  stage: docker
+  image: docker
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    - docker build . -t jonasasx/envrouter:latest
+    - docker push -a jonasasx/envrouter
+  dependencies:
+    - web
+    - server

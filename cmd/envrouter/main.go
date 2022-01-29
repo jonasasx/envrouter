@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter"
@@ -64,6 +65,7 @@ func main() {
 		instancePodObserver,
 	}
 	router.GET("/api/v1/subscription", server.streamPods)
+	router.Use(static.Serve("/", static.LocalFile("./public", true)))
 
 	api.RegisterHandlers(router, server)
 
