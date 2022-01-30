@@ -5,7 +5,7 @@ stages:
   - publish
 
 variables:
-  VERSION: "v0.1"
+  VERSION: "v0.2"
   HELM_VERSION: "0.1.0"
 
 web:
@@ -75,6 +75,7 @@ docker:
     - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
   script:
     - docker build . -t jonasasx/envrouter:latest
+    - docker tag jonasasx/envrouter:latest jonasasx/envrouter:$VERSION
     - docker push -a jonasasx/envrouter
   dependencies:
     - web

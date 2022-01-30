@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: jonasasx/envrouter
   pullPolicy: IfNotPresent
-  tag: "latest"
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: "envrouter"
