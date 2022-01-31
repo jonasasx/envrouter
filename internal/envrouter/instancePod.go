@@ -13,23 +13,35 @@ type InstancePodService interface {
 }
 
 type instancePodService struct {
-	podService k8s.PodService
+	podService    k8s.PodService
+	parentService k8s.ParentService
 }
 
 func NewInstancePodService(
 	podServiceFactoryMethod func(*k8s.PodEventHandler) (k8s.PodService, chan struct{}),
 	observer utils.Observer,
+	parentService k8s.ParentService,
 ) (InstancePodService, chan struct{}) {
 	handler := &k8s.PodEventHandler{
 		AddFunc: func(obj *v1.Pod) {
+			pod, err := mapInstancePod(obj, parentService)
+			if err != nil {
+				return
+			}
 			observer.Publish(&utils.ObserverEvent{
-				Item:  mapInstancePod(obj),
+				Item:  pod,
 				Event: "UPDATED",
 			})
 		},
 		UpdateFunc: func(oldObj, newObj *v1.Pod) {
-			oldPod := mapInstancePod(oldObj)
-			newPod := mapInstancePod(newObj)
+			oldPod, err := mapInstancePod(oldObj, parentService)
+			if err != nil {
+				return
+			}
+			newPod, err := mapInstancePod(newObj, parentService)
+			if err != nil {
+				return
+			}
 			if !reflect.DeepEqual(oldPod, newPod) {
 				observer.Publish(&utils.ObserverEvent{
 					Item:  newPod,
@@ -38,8 +50,12 @@ func NewInstancePodService(
 			}
 		},
 		DeleteFunc: func(obj *v1.Pod) {
+			pod, err := mapInstancePod(obj, parentService)
+			if err != nil {
+				return
+			}
 			observer.Publish(&utils.ObserverEvent{
-				Item:  mapInstancePod(obj),
+				Item:  pod,
 				Event: "DELETED",
 			})
 		},
@@ -47,6 +63,7 @@ func NewInstancePodService(
 	podService, stop := podServiceFactoryMethod(handler)
 	return &instancePodService{
 		podService,
+		parentService,
 	}, stop
 }
 
@@ -54,13 +71,16 @@ func (i *instancePodService) FindAll() ([]*api.InstancePod, error) {
 	pods := i.podService.GetAll()
 	var result []*api.InstancePod
 	for _, v := range pods {
-		instancePod := mapInstancePod(v)
+		instancePod, err := mapInstancePod(v, i.parentService)
+		if err != nil {
+			return nil, err
+		}
 		result = append(result, instancePod)
 	}
 	return result, nil
 }
 
-func mapInstancePod(pod *v1.Pod) *api.InstancePod {
+func mapInstancePod(pod *v1.Pod, parentService k8s.ParentService) (*api.InstancePod, error) {
 	started := true
 	ready := true
 	var startTime *string
@@ -74,6 +94,10 @@ func mapInstancePod(pod *v1.Pod) *api.InstancePod {
 	}
 	ref := pod.Annotations[k8s.RefAnnotationKey]
 	commitSha := pod.Annotations[k8s.ShaAnnotationKey]
+	parents, err := parentService.GetPodParents(pod)
+	if err != nil {
+		return nil, err
+	}
 	return &api.InstancePod{
 		Application: pod.Labels[k8s.ApplicationLabelKey],
 		Ref:         &ref,
@@ -85,5 +109,6 @@ func mapInstancePod(pod *v1.Pod) *api.InstancePod {
 		Ready:       ready,
 		Started:     started,
 		StartedTime: startTime,
-	}
+		Parents:     &parents,
+	}, err
 }

@@ -48,16 +48,17 @@ type InstanceType string
 
 // InstancePod defines model for InstancePod.
 type InstancePod struct {
-	Application string  `json:"application"`
-	CommitSha   *string `json:"commitSha,omitempty"`
-	CreatedTime string  `json:"createdTime"`
-	Environment string  `json:"environment"`
-	Name        string  `json:"name"`
-	Phase       string  `json:"phase"`
-	Ready       bool    `json:"ready"`
-	Ref         *string `json:"ref,omitempty"`
-	Started     bool    `json:"started"`
-	StartedTime *string `json:"startedTime,omitempty"`
+	Application string    `json:"application"`
+	CommitSha   *string   `json:"commitSha,omitempty"`
+	CreatedTime string    `json:"createdTime"`
+	Environment string    `json:"environment"`
+	Name        string    `json:"name"`
+	Parents     *[]string `json:"parents,omitempty"`
+	Phase       string    `json:"phase"`
+	Ready       bool      `json:"ready"`
+	Ref         *string   `json:"ref,omitempty"`
+	Started     bool      `json:"started"`
+	StartedTime *string   `json:"startedTime,omitempty"`
 }
 
 // RefBinding defines model for RefBinding.

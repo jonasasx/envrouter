@@ -5,10 +5,10 @@ package api
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
+	"github.com/gin-gonic/gin"
 )
 
 // ServerInterface represents all server handlers.

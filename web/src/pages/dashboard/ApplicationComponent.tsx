@@ -56,7 +56,11 @@ export default withStyles(styles)(function ApplicationComponent(props: Applicati
             </Grid>
             <Grid className={classes.instances} item xs={12}>
                 {
-                    instances.map(i => <InstanceComponent key={i.name} instance={i} instancePods={instancePods}/>)
+                    instances.map(i => <InstanceComponent
+                        key={i.name}
+                        instance={i}
+                        instancePods={instancePods.filter(instancePod => instancePod.parents?.includes(`${i.type}/${i.name}`) || false)}
+                    />)
                 }
             </Grid>
         </Grid>

@@ -41,6 +41,6 @@ func mapInstance(deployment *v1.Deployment) *api.Instance {
 		CommitSha:   &commitSha,
 		Environment: deployment.Namespace,
 		Name:        deployment.Name,
-		Type:        "deployment",
+		Type:        "apps/v1/Deployment",
 	}
 }

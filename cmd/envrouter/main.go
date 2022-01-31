@@ -33,6 +33,11 @@ func main() {
 
 	podServiceFactoryMethod := k8s.NewPodServiceFactoryMethod(context.TODO(), client)
 
+	replicaSetService, stop := k8s.NewReplicaSetService(context.TODO(), client)
+	defer close(stop)
+
+	parentService := k8s.NewParentService(context.TODO(), client, replicaSetService)
+
 	applicationService := envrouter.NewApplicationService(deploymentService, dataStorageFactory.NewApplicationStorage(), repositoryService)
 
 	environmentService := envrouter.NewEnvironmentService(deploymentService)
@@ -40,7 +45,7 @@ func main() {
 	instanceService := envrouter.NewInstanceService(deploymentService)
 
 	instancePodObserver := utils.NewObserver()
-	instancePodService, stop := envrouter.NewInstancePodService(podServiceFactoryMethod, instancePodObserver)
+	instancePodService, stop := envrouter.NewInstancePodService(podServiceFactoryMethod, instancePodObserver, parentService)
 	defer close(stop)
 
 	webhookService := envrouter.NewWebhookService()

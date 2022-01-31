@@ -232,6 +232,12 @@ export interface InstancePod {
      * @memberof InstancePod
      */
     'started': boolean;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof InstancePod
+     */
+    'parents'?: Array<string>;
 }
 /**
  * 
