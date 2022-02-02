@@ -89,7 +89,7 @@ func mapInstancePod(pod *v1.Pod, parentService k8s.ParentService) (*api.Instance
 		startTime = &s
 	}
 	for _, v := range pod.Status.ContainerStatuses {
-		started = started && *v.Started
+		started = started && v.Started != nil && *v.Started
 		ready = ready && v.Ready
 	}
 	ref := pod.Annotations[k8s.RefAnnotationKey]
