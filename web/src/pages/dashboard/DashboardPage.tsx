@@ -2,7 +2,7 @@ import {Grid} from "@mui/material";
 import {useEffect, useState} from "react";
 import {Application, DefaultApiFp, Environment, Instance, InstancePod, RefBinding} from "../../axios";
 import EnvironmentComponent from "./EnvironmentComponent";
-import {PodEvent} from "../../sse/api";
+import {SSEvent} from "../../sse/api";
 
 const api = DefaultApiFp()
 
@@ -13,29 +13,55 @@ export default function DashboardPage() {
     const [instances, setInstances] = useState<Array<Instance>>([])
     const [instancePods, setInstancePods] = useState<Array<InstancePod>>([])
 
-    const onPodEvent: ((e: PodEvent) => void) = e => {
-        const instancePod = e.item
-
-        setInstancePods((currentInstancePods: Array<InstancePod>) => {
-            const index = currentInstancePods.findIndex(i => i.name === instancePod.name)
-            console.log('Event: ', e.event, '; Index: ', index, '; Name: ', instancePod.name, '; Phase: ', instancePod.phase)
-            switch (e.event) {
-                case "UPDATED":
-                    if (index === -1) {
-                        return [...currentInstancePods, instancePod]
+    const onSSEvent: ((e: SSEvent) => void) = e => {
+        switch (e.itemType) {
+            case "InstancePod":
+                const instancePod = e.item as InstancePod
+                setInstancePods((currentInstancePods: Array<InstancePod>) => {
+                    const index = currentInstancePods.findIndex(i => i.name === instancePod.name)
+                    console.log('Event: ', e.event, '; Index: ', index, '; Name: ', instancePod.name, '; Phase: ', instancePod.phase)
+                    switch (e.event) {
+                        case "UPDATED":
+                            if (index === -1) {
+                                return [...currentInstancePods, instancePod]
+                            }
+                            return [
+                                ...currentInstancePods.slice(0, index),
+                                instancePod,
+                                ...currentInstancePods.slice(index + 1)
+                            ]
+                        case "DELETED":
+                            return [
+                                ...currentInstancePods.slice(0, index),
+                                ...currentInstancePods.slice(index + 1)
+                            ]
                     }
-                    return [
-                        ...currentInstancePods.slice(0, index),
-                        instancePod,
-                        ...currentInstancePods.slice(index + 1)
-                    ]
-                case "DELETED":
-                    return [
-                        ...currentInstancePods.slice(0, index),
-                        ...currentInstancePods.slice(index + 1)
-                    ]
-            }
-        })
+                })
+                break
+            case "Instance":
+                const instance = e.item as Instance
+                setInstances((currentInstances: Array<Instance>) => {
+                    const index = currentInstances.findIndex(i => i.name === instance.name)
+                    console.log('Event: ', e.event, '; Index: ', index, '; Name: ', instance.name)
+                    switch (e.event) {
+                        case "UPDATED":
+                            if (index === -1) {
+                                return [...currentInstances, instance]
+                            }
+                            return [
+                                ...currentInstances.slice(0, index),
+                                instance,
+                                ...currentInstances.slice(index + 1)
+                            ]
+                        case "DELETED":
+                            return [
+                                ...currentInstances.slice(0, index),
+                                ...currentInstances.slice(index + 1)
+                            ]
+                    }
+                })
+                break
+        }
     }
 
     const updateRefBindingChanged = (newRefBinding: RefBinding) => {
@@ -53,7 +79,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const eventSource = new EventSource('http://localhost:8080/api/v1/subscription')
-        eventSource.onmessage = e => onPodEvent(JSON.parse(e.data) as PodEvent)
+        eventSource.onmessage = e => onSSEvent(JSON.parse(e.data) as SSEvent)
         Promise.all([
             api.apiV1EnvironmentsGet().then(request => request()),
             api.apiV1ApplicationsGet().then(request => request()),

@@ -21,6 +21,7 @@ func init() {
 func main() {
 	var err error
 	client := k8s.NewClient("")
+	eventsObserver := utils.NewObserver()
 
 	dataStorageFactory := k8s.NewDataStorageFactory(client)
 
@@ -28,7 +29,8 @@ func main() {
 
 	credentialsSecretService := envrouter.NewCredentialsSecretService(dataStorageFactory.NewCredentialsSecretStorage())
 
-	deploymentService, stop := k8s.NewDeploymentService(context.TODO(), client)
+	deploymentObserver := utils.NewObserver()
+	deploymentService, stop := k8s.NewDeploymentService(context.TODO(), client, deploymentObserver)
 	defer close(stop)
 
 	podObserver := utils.NewObserver()
@@ -44,10 +46,10 @@ func main() {
 
 	environmentService := envrouter.NewEnvironmentService(deploymentService)
 
-	instanceService := envrouter.NewInstanceService(deploymentService)
+	instanceService, stop := envrouter.NewInstanceService(deploymentService, eventsObserver, deploymentObserver)
+	defer close(stop)
 
-	instancePodObserver := utils.NewObserver()
-	instancePodService, stop := envrouter.NewInstancePodService(podService, instancePodObserver, parentService, podObserver)
+	instancePodService, stop := envrouter.NewInstancePodService(podService, eventsObserver, parentService, podObserver)
 	defer close(stop)
 
 	webhookService := envrouter.NewWebhookService()
@@ -69,7 +71,7 @@ func main() {
 		instanceService,
 		instancePodService,
 		refService,
-		instancePodObserver,
+		eventsObserver,
 	}
 	router.GET("/api/v1/subscription", server.streamPods)
 	router.GET("/healthz", func(c *gin.Context) {
@@ -93,7 +95,7 @@ type ServerInterfaceImpl struct {
 	instanceService          envrouter.InstanceService
 	instancePodService       envrouter.InstancePodService
 	refService               envrouter.RefService
-	instancePodObserver      utils.Observer
+	eventsObserver           utils.Observer
 }
 
 func (s *ServerInterfaceImpl) GetApiV1Repositories(c *gin.Context) {
@@ -253,8 +255,8 @@ func (s *ServerInterfaceImpl) streamPods(c *gin.Context) {
 			subscriber <- newObj.(api.SSEvent)
 		},
 	}
-	s.instancePodObserver.Subscribe(&handler)
-	defer s.instancePodObserver.Unsubscribe(&handler)
+	s.eventsObserver.Subscribe(&handler)
+	defer s.eventsObserver.Unsubscribe(&handler)
 
 	c.Stream(func(w io.Writer) bool {
 		event := <-subscriber

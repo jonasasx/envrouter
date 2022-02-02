@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"gitlab.com/jonasasx/envrouter/internal/utils"
 	"k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
@@ -22,6 +23,7 @@ type deploymentService struct {
 func NewDeploymentService(
 	ctx context.Context,
 	client *client,
+	observer utils.Observer,
 ) (DeploymentService, chan struct{}) {
 	var err error
 	clientset, _, err := client.getK8sClient()
@@ -36,7 +38,17 @@ func NewDeploymentService(
 		watchlist,
 		&v1.Deployment{},
 		time.Second*0,
-		cache.ResourceEventHandlerFuncs{},
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				observer.Publish(nil, obj.(*v1.Deployment))
+			},
+			UpdateFunc: func(oldObj interface{}, newObj interface{}) {
+				observer.Publish(oldObj.(*v1.Deployment), newObj.(*v1.Deployment))
+			},
+			DeleteFunc: func(obj interface{}) {
+				observer.Publish(obj.(*v1.Deployment), nil)
+			},
+		},
 	)
 	stop := make(chan struct{})
 	go controller.Run(stop)

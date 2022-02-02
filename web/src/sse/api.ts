@@ -1,6 +1,7 @@
-import {InstancePod} from "../axios";
+import {Instance, InstancePod} from "../axios";
 
-export interface PodEvent {
-    item: InstancePod,
+export interface SSEvent {
+    itemType: "Instance" | "InstancePod"
+    item: Instance | InstancePod,
     event: "UPDATED" | "DELETED"
 }
