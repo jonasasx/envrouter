@@ -3,7 +3,7 @@ package envrouter
 import (
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/k8s"
-	"gitlab.com/jonasasx/envrouter/internal/envrouter/utils"
+	"gitlab.com/jonasasx/envrouter/internal/utils"
 	v1 "k8s.io/api/core/v1"
 	"reflect"
 )
@@ -28,9 +28,10 @@ func NewInstancePodService(
 			if err != nil {
 				return
 			}
-			observer.Publish(&utils.ObserverEvent{
-				Item:  pod,
-				Event: "UPDATED",
+			observer.Publish(nil, api.SSEvent{
+				ItemType: "InstancePod",
+				Item:     pod,
+				Event:    "UPDATED",
 			})
 		},
 		UpdateFunc: func(oldObj, newObj *v1.Pod) {
@@ -43,9 +44,10 @@ func NewInstancePodService(
 				return
 			}
 			if !reflect.DeepEqual(oldPod, newPod) {
-				observer.Publish(&utils.ObserverEvent{
-					Item:  newPod,
-					Event: "UPDATED",
+				observer.Publish(nil, api.SSEvent{
+					ItemType: "InstancePod",
+					Item:     newPod,
+					Event:    "UPDATED",
 				})
 			}
 		},
@@ -54,9 +56,10 @@ func NewInstancePodService(
 			if err != nil {
 				return
 			}
-			observer.Publish(&utils.ObserverEvent{
-				Item:  pod,
-				Event: "DELETED",
+			observer.Publish(nil, api.SSEvent{
+				ItemType: "InstancePod",
+				Item:     pod,
+				Event:    "DELETED",
 			})
 		},
 	}

@@ -9,7 +9,7 @@ import (
 	"gitlab.com/jonasasx/envrouter/internal/envrouter"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/k8s"
-	"gitlab.com/jonasasx/envrouter/internal/envrouter/utils"
+	"gitlab.com/jonasasx/envrouter/internal/utils"
 	"io"
 	"net/http"
 )
@@ -245,9 +245,14 @@ func (s *ServerInterfaceImpl) PostApiV1RefBindings(c *gin.Context) {
 }
 
 func (s *ServerInterfaceImpl) streamPods(c *gin.Context) {
-	subscriber := make(chan utils.ObserverEvent)
-	s.instancePodObserver.Subscribe(&subscriber)
-	defer s.instancePodObserver.Unsubscribe(&subscriber)
+	subscriber := make(chan api.SSEvent)
+	handler := utils.ObserverEventHandlerFuncs{
+		EventFunc: func(oldObj interface{}, newObj interface{}) {
+			subscriber <- newObj.(api.SSEvent)
+		},
+	}
+	s.instancePodObserver.Subscribe(&handler)
+	defer s.instancePodObserver.Unsubscribe(&handler)
 
 	c.Stream(func(w io.Writer) bool {
 		event := <-subscriber
