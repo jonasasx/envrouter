@@ -27,7 +27,7 @@ func (c *credentialsSecretService) FindAll() ([]*api.CredentialsSecretListItem, 
 	if err != nil {
 		return nil, err
 	}
-	var result []*api.CredentialsSecretListItem
+	result := []*api.CredentialsSecretListItem{}
 	for k, _ := range items {
 		item := api.CredentialsSecretListItem{
 			Name: k,

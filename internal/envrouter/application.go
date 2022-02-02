@@ -46,7 +46,7 @@ func (a *applicationService) FindAll() ([]*api.Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	var result []*api.Application
+	result := []*api.Application{}
 	for applicationName, _ := range applicationNames {
 		var application *api.Application
 

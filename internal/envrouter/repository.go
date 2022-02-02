@@ -51,7 +51,7 @@ func (r *repositoryService) FindAll() ([]*api.Repository, error) {
 	if err != nil {
 		return nil, err
 	}
-	var result []*api.Repository
+	result := []*api.Repository{}
 	for _, v := range data {
 		item := api.Repository{}
 		err := yaml.Unmarshal([]byte(v), &item)
