@@ -42,11 +42,13 @@ func (p *parentService) getParents(meta metav1.ObjectMeta) ([]string, error) {
 			if err != nil {
 				return nil, err
 			}
-			parents, err := p.getParents(replicaSet.ObjectMeta)
-			if err != nil {
-				return nil, err
+			if replicaSet != nil {
+				parents, err := p.getParents(replicaSet.ObjectMeta)
+				if err != nil {
+					return nil, err
+				}
+				result = append(result, parents...)
 			}
-			result = append(result, parents...)
 		}
 		result = append(result, reference+"/"+name)
 	}
