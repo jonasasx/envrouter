@@ -6,7 +6,7 @@ stages:
 
 variables:
   VERSION: "v0.2.2"
-  HELM_VERSION: "0.2.0"
+  HELM_VERSION: "0.2.2"
 
 web:
   stage: web
