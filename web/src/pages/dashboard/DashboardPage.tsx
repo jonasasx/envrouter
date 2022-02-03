@@ -78,7 +78,7 @@ export default function DashboardPage() {
     }
 
     useEffect(() => {
-        const eventSource = new EventSource('http://localhost:8080/api/v1/subscription')
+        const eventSource = new EventSource('/api/v1/subscription')
         eventSource.onmessage = e => onSSEvent(JSON.parse(e.data) as SSEvent)
         Promise.all([
             api.apiV1EnvironmentsGet().then(request => request()),
