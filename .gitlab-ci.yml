@@ -5,8 +5,8 @@ stages:
   - publish
 
 variables:
-  VERSION: "v0.2.5"
-  HELM_VERSION: "0.2.5"
+  VERSION: "v0.2.6"
+  HELM_VERSION: "0.2.6"
 
 web:
   stage: web
