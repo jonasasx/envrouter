@@ -12,6 +12,7 @@ import (
 	"gitlab.com/jonasasx/envrouter/internal/utils"
 	"io"
 	"net/http"
+	"time"
 )
 
 func init() {
@@ -258,6 +259,15 @@ func (s *ServerInterfaceImpl) streamPods(c *gin.Context) {
 	s.eventsObserver.Subscribe(&handler)
 	defer s.eventsObserver.Unsubscribe(&handler)
 
+	go func() {
+		for {
+			subscriber <- api.SSEvent{
+				ItemType: "Ping",
+			}
+			time.Sleep(time.Second * 10)
+		}
+
+	}()
 	c.Stream(func(w io.Writer) bool {
 		event := <-subscriber
 		c.SSEvent("", event)
