@@ -1,7 +1,7 @@
 import {WithStyles, withStyles} from "@mui/styles";
 import {Application, DefaultApiFp, Instance, InstancePod, RefBinding} from "../../axios";
 import {Theme} from "@mui/material/styles";
-import {Grid, TextField} from "@mui/material";
+import {CircularProgress, Grid, InputAdornment, TextField} from "@mui/material";
 import InstanceComponent from "./InstanceComponent";
 import {useSnackbar} from "notistack";
 
@@ -46,13 +46,21 @@ export default withStyles(styles)(function ApplicationComponent(props: Applicati
         }
     }
 
+    const deploying = refBinding?.ref && !instancePods.every(pod => pod.ref === refBinding.ref)
     return (
         <Grid className={classes.row} container>
             <Grid item xs={6} style={{display: "flex", alignItems: "flex-start"}}>
                 <small>{application.name}</small>
             </Grid>
             <Grid item xs={6}>
-                <TextField variant="standard" size="small" defaultValue={refBinding?.ref} onBlur={e => onRefChanged(e.target.value)}/>
+                <TextField variant="standard" size="small"
+                           defaultValue={refBinding?.ref}
+                           onBlur={e => onRefChanged(e.target.value)}
+                           InputProps={{
+                               endAdornment: (deploying && <InputAdornment position="end">
+                                   <CircularProgress size={16} />
+                               </InputAdornment>)
+                           }}/>
             </Grid>
             <Grid className={classes.instances} item xs={12}>
                 {
