@@ -9,9 +9,10 @@ import (
 	"gitlab.com/jonasasx/envrouter/internal/envrouter"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/k8s"
-	"gitlab.com/jonasasx/envrouter/internal/envrouter/utils"
+	"gitlab.com/jonasasx/envrouter/internal/utils"
 	"io"
 	"net/http"
+	"time"
 )
 
 func init() {
@@ -21,6 +22,7 @@ func init() {
 func main() {
 	var err error
 	client := k8s.NewClient("")
+	eventsObserver := utils.NewObserver()
 
 	dataStorageFactory := k8s.NewDataStorageFactory(client)
 
@@ -28,10 +30,13 @@ func main() {
 
 	credentialsSecretService := envrouter.NewCredentialsSecretService(dataStorageFactory.NewCredentialsSecretStorage())
 
-	deploymentService, stop := k8s.NewDeploymentService(context.TODO(), client)
+	deploymentObserver := utils.NewObserver()
+	deploymentService, stop := k8s.NewDeploymentService(context.TODO(), client, deploymentObserver)
 	defer close(stop)
 
-	podServiceFactoryMethod := k8s.NewPodServiceFactoryMethod(context.TODO(), client)
+	podObserver := utils.NewObserver()
+	podService, stop := k8s.NewPodService(context.TODO(), client, podObserver)
+	defer close(stop)
 
 	replicaSetService, stop := k8s.NewReplicaSetService(context.TODO(), client)
 	defer close(stop)
@@ -42,10 +47,10 @@ func main() {
 
 	environmentService := envrouter.NewEnvironmentService(deploymentService)
 
-	instanceService := envrouter.NewInstanceService(deploymentService)
+	instanceService, stop := envrouter.NewInstanceService(deploymentService, eventsObserver, deploymentObserver)
+	defer close(stop)
 
-	instancePodObserver := utils.NewObserver()
-	instancePodService, stop := envrouter.NewInstancePodService(podServiceFactoryMethod, instancePodObserver, parentService)
+	instancePodService, stop := envrouter.NewInstancePodService(podService, eventsObserver, parentService, podObserver)
 	defer close(stop)
 
 	webhookService := envrouter.NewWebhookService()
@@ -67,7 +72,7 @@ func main() {
 		instanceService,
 		instancePodService,
 		refService,
-		instancePodObserver,
+		eventsObserver,
 	}
 	router.GET("/api/v1/subscription", server.streamPods)
 	router.GET("/healthz", func(c *gin.Context) {
@@ -91,7 +96,7 @@ type ServerInterfaceImpl struct {
 	instanceService          envrouter.InstanceService
 	instancePodService       envrouter.InstancePodService
 	refService               envrouter.RefService
-	instancePodObserver      utils.Observer
+	eventsObserver           utils.Observer
 }
 
 func (s *ServerInterfaceImpl) GetApiV1Repositories(c *gin.Context) {
@@ -245,10 +250,24 @@ func (s *ServerInterfaceImpl) PostApiV1RefBindings(c *gin.Context) {
 }
 
 func (s *ServerInterfaceImpl) streamPods(c *gin.Context) {
-	subscriber := make(chan utils.ObserverEvent)
-	s.instancePodObserver.Subscribe(&subscriber)
-	defer s.instancePodObserver.Unsubscribe(&subscriber)
+	subscriber := make(chan api.SSEvent)
+	handler := utils.ObserverEventHandlerFuncs{
+		EventFunc: func(oldObj interface{}, newObj interface{}) {
+			subscriber <- newObj.(api.SSEvent)
+		},
+	}
+	s.eventsObserver.Subscribe(&handler)
+	defer s.eventsObserver.Unsubscribe(&handler)
 
+	go func() {
+		for {
+			subscriber <- api.SSEvent{
+				ItemType: "Ping",
+			}
+			time.Sleep(time.Second * 10)
+		}
+
+	}()
 	c.Stream(func(w io.Writer) bool {
 		event := <-subscriber
 		c.SSEvent("", event)

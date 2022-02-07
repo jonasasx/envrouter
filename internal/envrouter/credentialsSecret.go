@@ -3,7 +3,7 @@ package envrouter
 import (
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/k8s"
-	rand "gitlab.com/jonasasx/envrouter/internal/envrouter/utils"
+	rand "gitlab.com/jonasasx/envrouter/internal/utils"
 )
 
 type CredentialsSecretService interface {

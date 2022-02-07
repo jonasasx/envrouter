@@ -3,7 +3,7 @@ package envrouter
 import (
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/k8s"
-	"gitlab.com/jonasasx/envrouter/internal/envrouter/utils"
+	"gitlab.com/jonasasx/envrouter/internal/utils"
 	v1 "k8s.io/api/core/v1"
 	"reflect"
 )
@@ -18,60 +18,70 @@ type instancePodService struct {
 }
 
 func NewInstancePodService(
-	podServiceFactoryMethod func(*k8s.PodEventHandler) (k8s.PodService, chan struct{}),
-	observer utils.Observer,
+	podService k8s.PodService,
+	instancePodObserver utils.Observer,
 	parentService k8s.ParentService,
+	podObserver utils.Observer,
 ) (InstancePodService, chan struct{}) {
-	handler := &k8s.PodEventHandler{
-		AddFunc: func(obj *v1.Pod) {
-			pod, err := mapInstancePod(obj, parentService)
-			if err != nil {
-				return
-			}
-			observer.Publish(&utils.ObserverEvent{
-				Item:  pod,
-				Event: "UPDATED",
-			})
-		},
-		UpdateFunc: func(oldObj, newObj *v1.Pod) {
-			oldPod, err := mapInstancePod(oldObj, parentService)
-			if err != nil {
-				return
-			}
-			newPod, err := mapInstancePod(newObj, parentService)
-			if err != nil {
-				return
-			}
-			if !reflect.DeepEqual(oldPod, newPod) {
-				observer.Publish(&utils.ObserverEvent{
-					Item:  newPod,
-					Event: "UPDATED",
+	service := &instancePodService{
+		podService,
+		parentService,
+	}
+	handler := utils.ObserverEventHandlerFuncs{
+		EventFunc: func(oldObj interface{}, newObj interface{}) {
+			if oldObj == nil && newObj != nil {
+				pod, err := service.mapInstancePod(newObj.(*v1.Pod))
+				if err != nil {
+					return
+				}
+				instancePodObserver.Publish(nil, api.SSEvent{
+					ItemType: "InstancePod",
+					Item:     pod,
+					Event:    "UPDATED",
+				})
+			} else if oldObj != nil && newObj != nil {
+				oldPod, err := service.mapInstancePod(oldObj.(*v1.Pod))
+				if err != nil {
+					return
+				}
+				newPod, err := service.mapInstancePod(newObj.(*v1.Pod))
+				if err != nil {
+					return
+				}
+				if !reflect.DeepEqual(oldPod, newPod) {
+					instancePodObserver.Publish(nil, api.SSEvent{
+						ItemType: "InstancePod",
+						Item:     newPod,
+						Event:    "UPDATED",
+					})
+				}
+			} else if oldObj != nil && newObj == nil {
+				pod, err := service.mapInstancePod(oldObj.(*v1.Pod))
+				if err != nil {
+					return
+				}
+				instancePodObserver.Publish(nil, api.SSEvent{
+					ItemType: "InstancePod",
+					Item:     pod,
+					Event:    "DELETED",
 				})
 			}
 		},
-		DeleteFunc: func(obj *v1.Pod) {
-			pod, err := mapInstancePod(obj, parentService)
-			if err != nil {
-				return
-			}
-			observer.Publish(&utils.ObserverEvent{
-				Item:  pod,
-				Event: "DELETED",
-			})
-		},
 	}
-	podService, stop := podServiceFactoryMethod(handler)
-	return &instancePodService{
-		podService,
-		parentService,
-	}, stop
+	podObserver.Subscribe(handler)
+	stop := make(chan struct{})
+	go func() {
+		<-stop
+		podObserver.Unsubscribe(handler)
+	}()
+	return service, stop
 }
 
 func (i *instancePodService) FindAll() ([]*api.InstancePod, error) {
 	pods := i.podService.GetAll()
 	var result []*api.InstancePod
 	for _, v := range pods {
-		instancePod, err := mapInstancePod(v, i.parentService)
+		instancePod, err := i.mapInstancePod(v)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +90,7 @@ func (i *instancePodService) FindAll() ([]*api.InstancePod, error) {
 	return result, nil
 }
 
-func mapInstancePod(pod *v1.Pod, parentService k8s.ParentService) (*api.InstancePod, error) {
+func (i *instancePodService) mapInstancePod(pod *v1.Pod) (*api.InstancePod, error) {
 	started := true
 	ready := true
 	var startTime *string
@@ -94,7 +104,7 @@ func mapInstancePod(pod *v1.Pod, parentService k8s.ParentService) (*api.Instance
 	}
 	ref := pod.Annotations[k8s.RefAnnotationKey]
 	commitSha := pod.Annotations[k8s.ShaAnnotationKey]
-	parents, err := parentService.GetPodParents(pod)
+	parents, err := i.parentService.GetPodParents(pod)
 	if err != nil {
 		return nil, err
 	}
