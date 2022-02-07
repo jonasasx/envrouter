@@ -41,7 +41,11 @@ export default function DashboardPage() {
             case "Instance":
                 const instance = e.item as Instance
                 setInstances((currentInstances: Array<Instance>) => {
-                    const index = currentInstances.findIndex(i => i.name === instance.name)
+                    const index = currentInstances.findIndex(i =>
+                        i.name === instance.name &&
+                        i.application === instance.application &&
+                        i.environment === instance.environment
+                    )
                     console.log('Event: ', e.event, '; Index: ', index, '; Name: ', instance.name)
                     switch (e.event) {
                         case "UPDATED":
@@ -66,7 +70,10 @@ export default function DashboardPage() {
 
     const updateRefBindingChanged = (newRefBinding: RefBinding) => {
         setRefBindings(currentRefBindings => {
-            const index = refBindings.findIndex(r => r.environment === newRefBinding.environment && r.application === newRefBinding.application)
+            const index = refBindings.findIndex(r =>
+                r.environment === newRefBinding.environment &&
+                r.application === newRefBinding.application
+            )
             return (index === -1) &&
                 [...currentRefBindings, newRefBinding] ||
                 [
