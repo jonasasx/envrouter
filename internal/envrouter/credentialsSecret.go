@@ -1,6 +1,7 @@
 package envrouter
 
 import (
+	"fmt"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/k8s"
 	rand "gitlab.com/jonasasx/envrouter/internal/utils"
@@ -9,6 +10,7 @@ import (
 type CredentialsSecretService interface {
 	Save(credentialsSecretRequest *api.CredentialsSecretRequest) (*api.CredentialsSecretListItem, error)
 	FindAll() ([]*api.CredentialsSecretListItem, error)
+	FindByName(credentialsSecretName string) (*api.CredentialsSecretRequest, error)
 	DeleteByName(name string) error
 }
 
@@ -36,6 +38,21 @@ func (c *credentialsSecretService) FindAll() ([]*api.CredentialsSecretListItem, 
 		result = append(result, &item)
 	}
 	return result, nil
+}
+
+func (c *credentialsSecretService) FindByName(credentialsSecretName string) (*api.CredentialsSecretRequest, error) {
+	item, err := c.dataStorage.GetByName(credentialsSecretName)
+	if err != nil {
+		return nil, err
+	}
+	if item == nil {
+		return nil, fmt.Errorf("secret %s not found", credentialsSecretName)
+	}
+	return &api.CredentialsSecretRequest{
+		Key:      string(item["key"]),
+		Username: string(item["username"]),
+		Password: string(item["password"]),
+	}, nil
 }
 
 func (c *credentialsSecretService) Save(credentialsSecretRequest *api.CredentialsSecretRequest) (*api.CredentialsSecretListItem, error) {

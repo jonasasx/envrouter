@@ -60,6 +60,37 @@ export interface Application {
 /**
  * 
  * @export
+ * @interface Commit
+ */
+export interface Commit {
+    /**
+     * 
+     * @type {string}
+     * @memberof Commit
+     */
+    'sha': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Commit
+     */
+    'author'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Commit
+     */
+    'message'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Commit
+     */
+    'timestamp'?: string;
+}
+/**
+ * 
+ * @export
  * @interface CredentialsSecretListItem
  */
 export interface CredentialsSecretListItem {
@@ -494,6 +525,43 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {string} sha 
+         * @param {string} applicationName 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1GitApplicationsApplicationNameCommitsShaGet: async (sha: string, applicationName: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'sha' is not null or undefined
+            assertParamExists('apiV1GitApplicationsApplicationNameCommitsShaGet', 'sha', sha)
+            // verify required parameter 'applicationName' is not null or undefined
+            assertParamExists('apiV1GitApplicationsApplicationNameCommitsShaGet', 'applicationName', applicationName)
+            const localVarPath = `/api/v1/git/applications/{applicationName}/commits/{sha}`
+                .replace(`{${"sha"}}`, encodeURIComponent(String(sha)))
+                .replace(`{${"applicationName"}}`, encodeURIComponent(String(applicationName)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -793,6 +861,17 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {string} sha 
+         * @param {string} applicationName 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1GitApplicationsApplicationNameCommitsShaGet(sha: string, applicationName: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Commit>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1GitApplicationsApplicationNameCommitsShaGet(sha, applicationName, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -922,6 +1001,16 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         apiV1EnvironmentsGet(options?: any): AxiosPromise<Array<Environment>> {
             return localVarFp.apiV1EnvironmentsGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} sha 
+         * @param {string} applicationName 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1GitApplicationsApplicationNameCommitsShaGet(sha: string, applicationName: string, options?: any): AxiosPromise<Commit> {
+            return localVarFp.apiV1GitApplicationsApplicationNameCommitsShaGet(sha, applicationName, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1058,6 +1147,18 @@ export class DefaultApi extends BaseAPI {
      */
     public apiV1EnvironmentsGet(options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiV1EnvironmentsGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} sha 
+     * @param {string} applicationName 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1GitApplicationsApplicationNameCommitsShaGet(sha: string, applicationName: string, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1GitApplicationsApplicationNameCommitsShaGet(sha, applicationName, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

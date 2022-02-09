@@ -59,6 +59,8 @@ func main() {
 
 	refService := envrouter.NewRefService(dataStorageFactory.NewRefBindingStorage(), environmentService, applicationService, deployService)
 
+	gitClient := envrouter.NewGitClient(applicationService, repositoryService, credentialsSecretService)
+
 	router := gin.Default()
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
@@ -73,6 +75,7 @@ func main() {
 		instancePodService,
 		refService,
 		eventsObserver,
+		gitClient,
 	}
 	router.GET("/api/v1/subscription", server.streamPods)
 	router.GET("/healthz", func(c *gin.Context) {
@@ -97,6 +100,7 @@ type ServerInterfaceImpl struct {
 	instancePodService       envrouter.InstancePodService
 	refService               envrouter.RefService
 	eventsObserver           utils.Observer
+	gitClient                envrouter.GitClient
 }
 
 func (s *ServerInterfaceImpl) GetApiV1Repositories(c *gin.Context) {
@@ -241,6 +245,16 @@ func (s *ServerInterfaceImpl) PostApiV1RefBindings(c *gin.Context) {
 		return
 	}
 	result, err := s.refService.SaveBinding(&json)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	} else {
+		c.IndentedJSON(200, result)
+	}
+}
+
+func (s *ServerInterfaceImpl) GetApiV1GitApplicationsApplicationNameCommitsSha(c *gin.Context, applicationName string, sha string) {
+	result, err := s.gitClient.GetCommitByHash(applicationName, sha)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

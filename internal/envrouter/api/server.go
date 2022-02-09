@@ -32,6 +32,9 @@ type ServerInterface interface {
 	// (GET /api/v1/environments)
 	GetApiV1Environments(c *gin.Context)
 
+	// (GET /api/v1/git/applications/{applicationName}/commits/{sha})
+	GetApiV1GitApplicationsApplicationNameCommitsSha(c *gin.Context, applicationName string, sha string)
+
 	// (GET /api/v1/instancePods)
 	GetApiV1InstancePods(c *gin.Context)
 
@@ -142,6 +145,36 @@ func (siw *ServerInterfaceWrapper) GetApiV1Environments(c *gin.Context) {
 	}
 
 	siw.Handler.GetApiV1Environments(c)
+}
+
+// GetApiV1GitApplicationsApplicationNameCommitsSha operation middleware
+func (siw *ServerInterfaceWrapper) GetApiV1GitApplicationsApplicationNameCommitsSha(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "applicationName" -------------
+	var applicationName string
+
+	err = runtime.BindStyledParameter("simple", false, "applicationName", c.Param("applicationName"), &applicationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter applicationName: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "sha" -------------
+	var sha string
+
+	err = runtime.BindStyledParameter("simple", false, "sha", c.Param("sha"), &sha)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter sha: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetApiV1GitApplicationsApplicationNameCommitsSha(c, applicationName, sha)
 }
 
 // GetApiV1InstancePods operation middleware
@@ -292,6 +325,8 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 	router.DELETE(options.BaseURL+"/api/v1/credentialsSecrets/:name", wrapper.DeleteApiV1CredentialsSecretsName)
 
 	router.GET(options.BaseURL+"/api/v1/environments", wrapper.GetApiV1Environments)
+
+	router.GET(options.BaseURL+"/api/v1/git/applications/:applicationName/commits/:sha", wrapper.GetApiV1GitApplicationsApplicationNameCommitsSha)
 
 	router.GET(options.BaseURL+"/api/v1/instancePods", wrapper.GetApiV1InstancePods)
 

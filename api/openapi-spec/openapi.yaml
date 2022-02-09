@@ -132,6 +132,19 @@ components:
           type: array
           items:
             type: string
+    Commit:
+      type: object
+      required:
+        - sha
+      properties:
+        sha:
+          type: string
+        author:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
 
 paths:
   "/api/v1/repositories":
@@ -310,3 +323,23 @@ paths:
             "application/json":
               "schema":
                 "$ref": "#/components/schemas/RefBinding"
+  "/api/v1/git/applications/{applicationName}/commits/{sha}":
+    get:
+      parameters:
+        - name: sha
+          in: path
+          schema:
+            type: string
+          required: true
+        - name: applicationName
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Commit"

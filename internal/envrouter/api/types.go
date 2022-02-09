@@ -15,6 +15,14 @@ type Application struct {
 	Webhook        *string `json:"webhook,omitempty"`
 }
 
+// Commit defines model for Commit.
+type Commit struct {
+	Author    *string `json:"author,omitempty"`
+	Message   *string `json:"message,omitempty"`
+	Sha       string  `json:"sha"`
+	Timestamp *string `json:"timestamp,omitempty"`
+}
+
 // CredentialsSecretListItem defines model for CredentialsSecretListItem.
 type CredentialsSecretListItem struct {
 	Name string `json:"name"`

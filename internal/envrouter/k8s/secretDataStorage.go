@@ -10,6 +10,7 @@ import (
 type SecretDataStorage interface {
 	Save(key string, data map[string][]byte) error
 	ListByLabel() (map[string]map[string][]byte, error)
+	GetByName(name string) (map[string][]byte, error)
 	DeleteByName(name string) error
 }
 
@@ -82,6 +83,16 @@ func (s *secretDataStorage) ListByLabel() (map[string]map[string][]byte, error) 
 		result[v.Name] = v.Data
 	}
 	return result, nil
+}
+
+func (s *secretDataStorage) GetByName(name string) (map[string][]byte, error) {
+	var err error
+	clientset, _, err := s.client.getK8sClient()
+	item, err := clientset.CoreV1().Secrets(s.namespace).Get(s.ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return item.Data, nil
 }
 
 func (s *secretDataStorage) DeleteByName(name string) error {
