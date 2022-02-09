@@ -55,6 +55,7 @@ export default withStyles(styles)(function InstancePodComponent(props: InstanceP
         {key: "Branch", value: instancePod.ref || "-"},
         {key: "Commit", value: instancePod.commitSha},
         {key: "Author", value: loading ? <CircularProgress size={16}/> : commit?.author},
+        {key: "Commit time", value: loading ? <CircularProgress size={16}/> : commit?.timestamp && new Date(Date.parse(commit?.timestamp)).toLocaleString()},
         {key: "Commit Message", value: loading ? <CircularProgress size={16}/> : commit?.message},
     ]
     return (

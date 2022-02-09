@@ -15,6 +15,7 @@ import (
 
 type GitClient interface {
 	GetCommitByHash(applicationName string, hash string) (*api.Commit, error)
+	GetLatestCommit(repositoryName string, ref string) (*api.Commit, error)
 }
 
 type gitClient struct {
@@ -65,6 +66,22 @@ func (g *gitClient) getCommitByHash(repository *git.Repository, hash plumbing.Ha
 	}, nil
 }
 
+func (g *gitClient) GetLatestCommit(repositoryName string, ref string) (*api.Commit, error) {
+	options, fs, storer, err := g.getGitOptions(repositoryName)
+	if err != nil {
+		return nil, err
+	}
+	r, err := git.Clone(storer, fs, options)
+	if err != nil {
+		panic(err)
+	}
+	h, err := r.ResolveRevision(plumbing.Revision("origin/" + ref))
+	if err != nil {
+		panic(err)
+	}
+	return g.getCommitByHash(r, *h)
+}
+
 func (g *gitClient) getGitOptions(repositoryName string) (*git.CloneOptions, billy.Filesystem, *memory.Storage, error) {
 	repository, err := g.repositoryService.FindByName(repositoryName)
 	if err != nil {
@@ -98,4 +115,60 @@ func (g *gitClient) getGitOptions(repositoryName string) (*git.CloneOptions, bil
 		}
 	}
 	return options, memfs.New(), memory.NewStorage(), nil
+}
+
+type GitStorage interface {
+	GetCommitByHash(applicationName string, hash string) (*api.Commit, error)
+	GetLatestCommit(repositoryName string, ref string, force bool) (*api.Commit, error)
+}
+
+type gitStorage struct {
+	gitClient GitClient
+	commits   map[string]*api.Commit
+	branches  map[string]map[string]*api.Commit
+}
+
+func NewGitStorage(
+	gitClient GitClient,
+) GitStorage {
+	return &gitStorage{
+		gitClient: gitClient,
+		commits:   map[string]*api.Commit{},
+		branches:  map[string]map[string]*api.Commit{},
+	}
+}
+
+func (g *gitStorage) GetCommitByHash(applicationName string, hash string) (*api.Commit, error) {
+	if commit, ok := g.commits[hash]; ok {
+		return commit, nil
+	}
+	commit, err := g.gitClient.GetCommitByHash(applicationName, hash)
+	if err != nil {
+		return nil, err
+	}
+	if commit != nil {
+		g.commits[hash] = commit
+	}
+	return commit, nil
+}
+
+func (g gitStorage) GetLatestCommit(repositoryName string, ref string, force bool) (*api.Commit, error) {
+	if !force {
+		if repository, ok := g.branches[repositoryName]; ok {
+			if commit, ok := repository[ref]; ok {
+				return commit, nil
+			}
+		}
+	}
+	commit, err := g.gitClient.GetLatestCommit(repositoryName, ref)
+	if err != nil {
+		return nil, err
+	}
+	if commit != nil {
+		if _, ok := g.branches[repositoryName]; !ok {
+			g.branches[repositoryName] = map[string]*api.Commit{}
+		}
+		g.branches[repositoryName][ref] = commit
+	}
+	return nil, err
 }
