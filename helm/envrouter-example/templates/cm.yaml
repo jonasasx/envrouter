@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envrouter-applications
+data:
+  notifier: |
+    name: notifier
+    repositoryName: notifier
+  reflector: |
+    name: reflector
+    repositoryName: reflector
+  syncer: |
+    name: syncer
+    repositoryName: syncer
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envrouter-ref-binding
+data:
+  dev1-notifier: |
+    application: notifier
+    environment: dev1
+    ref: main
+  dev1-reflector: |
+    application: reflector
+    environment: dev1
+    ref: main
+  dev1-syncer: |
+    application: syncer
+    environment: dev1
+    ref: main
+  dev2-notifier: |
+    application: notifier
+    environment: dev2
+    ref: main
+  dev2-reflector: |
+    application: reflector
+    environment: dev2
+    ref: main
+  dev2-syncer: |
+    application: syncer
+    environment: dev2
+    ref: main
+  dev3-notifier: |
+    application: notifier
+    environment: dev3
+    ref: main
+  dev3-reflector: |
+    application: reflector
+    environment: dev3
+    ref: main
+  dev3-syncer: |
+    application: syncer
+    environment: dev3
+    ref: main
+  dev4-notifier: |
+    application: notifier
+    environment: dev4
+    ref: main
+  dev4-reflector: |
+    application: reflector
+    environment: dev4
+    ref: main
+  dev4-syncer: |
+    application: syncer
+    environment: dev4
+    ref: main
+  qa1-notifier: |
+    application: notifier
+    environment: qa1
+    ref: main
+  qa1-reflector: |
+    application: reflector
+    environment: qa1
+    ref: main
+  qa1-syncer: |
+    application: syncer
+    environment: qa1
+    ref: main
+  qa2-notifier: |
+    application: notifier
+    environment: qa2
+    ref: main
+  qa2-reflector: |
+    application: reflector
+    environment: qa2
+    ref: main
+  qa2-syncer: |
+    application: syncer
+    environment: qa2
+    ref: main
+  qa3-notifier: |
+    application: notifier
+    environment: qa3
+    ref: main
+  qa3-reflector: |
+    application: reflector
+    environment: qa3
+    ref: main
+  qa3-syncer: |
+    application: syncer
+    environment: qa3
+    ref: main
+  qa4-notifier: |
+    application: notifier
+    environment: qa4
+    ref: main
+  qa4-reflector: |
+    application: reflector
+    environment: qa4
+    ref: main
+  qa4-syncer: |
+    application: syncer
+    environment: qa4
+    ref: main
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envrouter-repositories
+data:
+  notifier: |
+    credentialsSecret: envrouter-p30s1pmm
+    name: notifier
+    url: git@gitlab.com:jonasasx/notifier-example.git
+  reflector: |
+    credentialsSecret: envrouter-p30s1pmm
+    name: reflector
+    url: git@gitlab.com:jonasasx/notifier-example.git
+  syncer: |
+    credentialsSecret: envrouter-p30s1pmm
+    name: syncer
+    url: git@gitlab.com:jonasasx/notifier-example.git
