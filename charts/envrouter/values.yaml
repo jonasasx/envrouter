@@ -1,0 +1,89 @@
+# -- Service instance count
+replicaCount: 1
+
+image:
+  # -- Repository to use for extensions image
+  repository: jonasasx/envrouter
+  # -- Image pull policy for extensions
+  pullPolicy: IfNotPresent
+  # -- Tag to use for extensions image
+  tag: "v0.2.8"
+
+# -- Secrets with credentials to pull images from a private registry
+imagePullSecrets: []
+# -- Provide a name in place of `envrouter`
+nameOverride: "envrouter"
+# -- String to fully override `"envrouter.fullname"`
+fullnameOverride: "envrouter"
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- Annotations for the deployed pod
+podAnnotations: {}
+
+# -- Pod Security Context
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# -- Toggle and define securityContext. See [values.yaml]
+securityContext: {}
+  # runAsUser: 999
+  # runAsGroup: 999
+  # fsGroup: 999
+
+## Envrouter service configuration
+service:
+  # -- Envrouter service type
+  type: ClusterIP
+  # -- Envrouter service http port
+  port: 80
+
+ingress:
+  # -- Enable an ingress resource for the envrouter server
+  enabled: false
+  # -- Additional ingress annotations
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+
+  # -- List of ingress hosts
+  ## Envrouter Ingress.
+  ## Hostnames must be provided if Ingress is enabled.
+  ## Secrets must be manually created in the namespace
+  hosts:
+    - host: envrouter.local
+      paths:
+      - path: /
+        backend:
+          serviceName: envrouter.local
+          servicePort: 80
+  # -- Ingress TLS configuration
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+# -- Resource limits and requests for the controller
+resources:
+  limits:
+   cpu: 100m
+   memory: 128Mi
+  requests:
+   cpu: 100m
+   memory: 128Mi
+
+# -- [Node selector]
+nodeSelector: {}
+
+# -- [Tolerations] for use with node taints
+tolerations: []
+
+# -- Assign custom [affinity] rules
+affinity: {}
