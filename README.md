@@ -11,7 +11,7 @@ on each environment.
 ### How Envrouter helps
 
 * Envrouter shows every service at every environment, and it's git branch.
-* Envrouter returns to CI/CD pipeline where the deploying service must be deployed.
+* Envrouter returns to CI/CD pipeline list of environments the deploying service must be deployed.
 * When user changes git branch in Envrouter table, Envrouter triggers deploying CI/CD pipeline.
 
 ![Envrouter UI](docs/assets/afcf9cd8e8.jpg)
