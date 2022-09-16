@@ -63,6 +63,9 @@ func main() {
 
 	gitStorage := envrouter.NewGitStorage(gitClient)
 
+	gitScanJob := envrouter.NewGitScanJob(repositoryService, gitStorage)
+	go gitScanJob.Scan()
+
 	router := gin.Default()
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
