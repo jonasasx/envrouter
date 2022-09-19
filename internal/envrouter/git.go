@@ -2,16 +2,15 @@ package envrouter
 
 import (
 	"fmt"
-	"github.com/go-git/go-billy/v5"
-	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
-	"github.com/go-git/go-git/v5/storage/memory"
 	log "github.com/sirupsen/logrus"
 	"gitlab.com/jonasasx/envrouter/internal/envrouter/api"
+	"gitlab.com/jonasasx/envrouter/internal/utils"
 	"os"
+	"reflect"
 
 	cryptossh "golang.org/x/crypto/ssh"
 	"strings"
@@ -19,31 +18,27 @@ import (
 )
 
 type GitClient interface {
-	GetCommitByHash(applicationName string, hash string) (*api.Commit, error)
-	GetLatestCommit(repositoryName string, ref string) (*api.Commit, error)
-	GetAllLatestCommits(repositoryName string, supplier func(ref string, commit *api.Commit)) error
+	GetCommitByHash(repositoryName string, hash string) (*api.Commit, error)
+	SupplyRefsHeads(repositoryName string, supplier func(ref string, commit *api.Commit)) error
 }
 
 type gitClient struct {
-	applicationService       ApplicationService
 	repositoryService        RepositoryService
 	credentialsSecretService CredentialsSecretService
 }
 
 func NewGitClient(
-	applicationService ApplicationService,
 	repositoryService RepositoryService,
 	credentialsSecretService CredentialsSecretService,
 ) GitClient {
 	return &gitClient{
-		applicationService,
 		repositoryService,
 		credentialsSecretService,
 	}
 }
 
 func (g *gitClient) getRepository(repositoryName string) (*git.Repository, error) {
-	options, _, _, err := g.getGitOptions(repositoryName)
+	options, err := g.getGitOptions(repositoryName)
 	if err != nil {
 		return nil, err
 	}
@@ -52,21 +47,22 @@ func (g *gitClient) getRepository(repositoryName string) (*git.Repository, error
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		r, err = git.PlainClone(path, true, options)
 	} else {
+		log.Infof("Start fetching %s", repositoryName)
 		r, err = git.PlainOpenWithOptions(path, &git.PlainOpenOptions{})
-		err = r.Fetch(&git.FetchOptions{RemoteName: "origin", Depth: 1, Auth: options.Auth})
 		if err != nil {
 			return nil, err
 		}
+		err = r.Fetch(&git.FetchOptions{RemoteName: "origin", Depth: 1, Auth: options.Auth, Progress: options.Progress})
+		if err != nil && fmt.Sprint(err) != "already up-to-date" {
+			return nil, err
+		}
+		log.Infof("Fetched %s", repositoryName)
 	}
 	return r, err
 }
 
-func (g *gitClient) GetCommitByHash(applicationName string, hash string) (*api.Commit, error) {
-	application, err := g.applicationService.FindByName(applicationName)
-	if err != nil {
-		return nil, err
-	}
-	r, err := g.getRepository(*application.RepositoryName)
+func (g *gitClient) GetCommitByHash(repositoryName string, hash string) (*api.Commit, error) {
+	r, err := g.getRepository(repositoryName)
 	if err != nil {
 		panic(err)
 	}
@@ -87,19 +83,7 @@ func (g *gitClient) getCommitByHash(repository *git.Repository, hash plumbing.Ha
 	}, nil
 }
 
-func (g *gitClient) GetLatestCommit(repositoryName string, ref string) (*api.Commit, error) {
-	r, err := g.getRepository(repositoryName)
-	if err != nil {
-		panic(err)
-	}
-	h, err := r.ResolveRevision(plumbing.Revision("origin/" + ref))
-	if err != nil {
-		panic(err)
-	}
-	return g.getCommitByHash(r, *h)
-}
-
-func (g *gitClient) GetAllLatestCommits(repositoryName string, supplier func(ref string, commit *api.Commit)) error {
+func (g *gitClient) SupplyRefsHeads(repositoryName string, supplier func(ref string, commit *api.Commit)) error {
 	r, err := g.getRepository(repositoryName)
 	if err != nil {
 		return err
@@ -123,14 +107,14 @@ func (g *gitClient) GetAllLatestCommits(repositoryName string, supplier func(ref
 	return nil
 }
 
-func (g *gitClient) getGitOptions(repositoryName string) (*git.CloneOptions, billy.Filesystem, *memory.Storage, error) {
+func (g *gitClient) getGitOptions(repositoryName string) (*git.CloneOptions, error) {
 	repository, err := g.repositoryService.FindByName(repositoryName)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
 	credentials, err := g.credentialsSecretService.FindByName(repository.CredentialsSecret)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
 
 	options := &git.CloneOptions{
@@ -156,36 +140,53 @@ func (g *gitClient) getGitOptions(repositoryName string) (*git.CloneOptions, bil
 			options.Auth = key
 		}
 	}
-	return options, memfs.New(), memory.NewStorage(), nil
+	return options, nil
 }
 
 type GitStorage interface {
+	GetAllRefsHeads() ([]*api.Ref, error)
 	GetCommitByHash(applicationName string, hash string) (*api.Commit, error)
-	GetLatestCommit(repositoryName string, ref string, force bool) (*api.Commit, error)
-	Scan(repositoryName string) error
+	ScanRefsHeads(repositoryName string) error
 }
 
 type gitStorage struct {
-	gitClient GitClient
-	commits   map[string]*api.Commit
-	branches  map[string]map[string]*api.Commit
+	gitClient      GitClient
+	eventsObserver utils.Observer
+	commits        map[string]*api.Commit
+	branches       map[string]map[string]*api.Commit
 }
 
 func NewGitStorage(
 	gitClient GitClient,
+	eventsObserver utils.Observer,
 ) GitStorage {
 	return &gitStorage{
-		gitClient: gitClient,
-		commits:   map[string]*api.Commit{},
-		branches:  map[string]map[string]*api.Commit{},
+		gitClient:      gitClient,
+		eventsObserver: eventsObserver,
+		commits:        map[string]*api.Commit{},
+		branches:       map[string]map[string]*api.Commit{},
 	}
 }
 
-func (g *gitStorage) GetCommitByHash(applicationName string, hash string) (*api.Commit, error) {
+func (g *gitStorage) GetAllRefsHeads() ([]*api.Ref, error) {
+	var result []*api.Ref
+	for repositoryName, v := range g.branches {
+		for ref, commit := range v {
+			result = append(result, &api.Ref{
+				Application: repositoryName,
+				Commit:      *commit,
+				Ref:         ref,
+			})
+		}
+	}
+	return result, nil
+}
+
+func (g *gitStorage) GetCommitByHash(repositoryName string, hash string) (*api.Commit, error) {
 	if commit, ok := g.commits[hash]; ok {
 		return commit, nil
 	}
-	commit, err := g.gitClient.GetCommitByHash(applicationName, hash)
+	commit, err := g.gitClient.GetCommitByHash(repositoryName, hash)
 	if err != nil {
 		return nil, err
 	}
@@ -195,34 +196,28 @@ func (g *gitStorage) GetCommitByHash(applicationName string, hash string) (*api.
 	return commit, nil
 }
 
-func (g *gitStorage) GetLatestCommit(repositoryName string, ref string, force bool) (*api.Commit, error) {
-	if !force {
-		if repository, ok := g.branches[repositoryName]; ok {
-			if commit, ok := repository[ref]; ok {
-				return commit, nil
-			}
-		}
+func (g *gitStorage) addRefHeadCommit(repositoryName string, ref string, commit *api.Commit) {
+	if _, ok := g.branches[repositoryName]; !ok {
+		g.branches[repositoryName] = map[string]*api.Commit{}
 	}
-	commit, err := g.gitClient.GetLatestCommit(repositoryName, ref)
-	if err != nil {
-		return nil, err
-	}
-	if commit != nil {
-		if _, ok := g.branches[repositoryName]; !ok {
-			g.branches[repositoryName] = map[string]*api.Commit{}
-		}
+	if oldCommit, ok := g.branches[repositoryName][ref]; !ok || !reflect.DeepEqual(oldCommit, commit) {
 		g.branches[repositoryName][ref] = commit
+		g.eventsObserver.Publish(nil, api.SSEvent{
+			ItemType: "HeadCommit",
+			Item: api.Ref{
+				Application: repositoryName,
+				Commit:      *commit,
+				Ref:         ref,
+			},
+			Event: "UPDATED",
+		})
 	}
-	return nil, err
 }
 
-func (g *gitStorage) Scan(repositoryName string) error {
-	err := g.gitClient.GetAllLatestCommits(repositoryName, func(ref string, commit *api.Commit) {
+func (g *gitStorage) ScanRefsHeads(repositoryName string) error {
+	err := g.gitClient.SupplyRefsHeads(repositoryName, func(ref string, commit *api.Commit) {
 		g.commits[commit.Sha] = commit
-		if _, ok := g.branches[repositoryName]; !ok {
-			g.branches[repositoryName] = map[string]*api.Commit{}
-		}
-		g.branches[repositoryName][ref] = commit
+		g.addRefHeadCommit(repositoryName, ref, commit)
 	})
 	if err != nil {
 		return err
@@ -253,12 +248,12 @@ func (g *gitScanJob) Scan() {
 			log.Errorf("Error on git scan %v", err)
 		}
 		for _, v := range rs {
-			err := g.gitStorage.Scan(v.Name)
+			err := g.gitStorage.ScanRefsHeads(v.Name)
 			if err != nil {
 				log.Errorf("Error on git scan %v", err)
 			}
 		}
-		log.Info("Scan finished")
+		log.Info("ScanRefsHeads finished")
 		time.Sleep(30 * time.Second)
 	}
 }

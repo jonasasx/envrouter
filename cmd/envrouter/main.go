@@ -59,9 +59,9 @@ func main() {
 
 	refService := envrouter.NewRefService(dataStorageFactory.NewRefBindingStorage(), environmentService, applicationService, deployService)
 
-	gitClient := envrouter.NewGitClient(applicationService, repositoryService, credentialsSecretService)
+	gitClient := envrouter.NewGitClient(repositoryService, credentialsSecretService)
 
-	gitStorage := envrouter.NewGitStorage(gitClient)
+	gitStorage := envrouter.NewGitStorage(gitClient, eventsObserver)
 
 	gitScanJob := envrouter.NewGitScanJob(repositoryService, gitStorage)
 	go gitScanJob.Scan()
@@ -258,8 +258,18 @@ func (s *ServerInterfaceImpl) PostApiV1RefBindings(c *gin.Context) {
 	}
 }
 
-func (s *ServerInterfaceImpl) GetApiV1GitApplicationsApplicationNameCommitsSha(c *gin.Context, applicationName string, sha string) {
-	result, err := s.gitStorage.GetCommitByHash(applicationName, sha)
+func (s *ServerInterfaceImpl) GetApiV1GitRepositoriesRepositoryNameCommitsSha(c *gin.Context, repositoryName string, sha string) {
+	result, err := s.gitStorage.GetCommitByHash(repositoryName, sha)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	} else {
+		c.IndentedJSON(200, result)
+	}
+}
+
+func (s *ServerInterfaceImpl) GetApiV1GitRefs(c *gin.Context) {
+	result, err := s.gitStorage.GetAllRefsHeads()
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

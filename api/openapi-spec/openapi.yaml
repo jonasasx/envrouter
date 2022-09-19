@@ -145,6 +145,19 @@ components:
           type: string
         timestamp:
           type: string
+    Ref:
+      type: object
+      required:
+        - ref
+        - application
+        - commit
+      properties:
+        ref:
+          type: string
+        application:
+          type: string
+        commit:
+          $ref: "#/components/schemas/Commit"
 
 paths:
   "/api/v1/repositories":
@@ -323,7 +336,7 @@ paths:
             "application/json":
               "schema":
                 "$ref": "#/components/schemas/RefBinding"
-  "/api/v1/git/applications/{applicationName}/commits/{sha}":
+  "/api/v1/git/repositories/{repositoryName}/commits/{sha}":
     get:
       parameters:
         - name: sha
@@ -331,7 +344,7 @@ paths:
           schema:
             type: string
           required: true
-        - name: applicationName
+        - name: repositoryName
           in: path
           schema:
             type: string
@@ -343,3 +356,12 @@ paths:
             "application/json":
               "schema":
                 "$ref": "#/components/schemas/Commit"
+  "/api/v1/git/refs":
+    get:
+      responses:
+        "200":
+          description: Success
+          content:
+            "application/json":
+              "schema":
+                "$ref": "#/components/schemas/Ref"
