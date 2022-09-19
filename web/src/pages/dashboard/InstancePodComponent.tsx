@@ -2,11 +2,13 @@ import {Card, Chip, CircularProgress, Divider, Grid, List, ListItem} from "@mui/
 import React, {useEffect, useState} from "react";
 import {Theme} from "@mui/material/styles";
 import {WithStyles, withStyles} from "@mui/styles";
-import {Commit, DefaultApiFp, InstancePod} from "../../axios";
+import {Commit, DefaultApiFp, Application, InstancePod, Ref} from "../../axios";
 import {useSnackbar} from "notistack";
 
 interface InstancePodProps extends WithStyles<typeof styles> {
+    application: Application
     instancePod: InstancePod
+    refsHeads: Array<Ref>
 }
 
 const styles = (theme: Theme) => ({
@@ -18,14 +20,14 @@ const styles = (theme: Theme) => ({
 const api = DefaultApiFp()
 
 export default withStyles(styles)(function InstancePodComponent(props: InstancePodProps) {
-    const {classes, instancePod} = props
+    const {classes, application, instancePod} = props
     const [loading, setLoading] = useState(false)
     const [commit, setCommit] = useState<Commit | undefined>(undefined)
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
     useEffect(() => {
-        if (instancePod.commitSha) {
+        if (instancePod.commitSha && application.repositoryName) {
             setLoading(true)
-            api.apiV1GitApplicationsApplicationNameCommitsShaGet(instancePod.commitSha, instancePod.application)
+            api.apiV1GitRepositoriesRepositoryNameCommitsShaGet(instancePod.commitSha, application.repositoryName!)
                 .then(request => request())
                 .then(response => setCommit(response.data))
                 .then(() => setLoading(false))
@@ -38,7 +40,6 @@ export default withStyles(styles)(function InstancePodComponent(props: InstanceP
             }
         }
     }, [enqueueSnackbar, closeSnackbar])
-
 
     const rows: Array<{ key: string, value: any }> = [
         {key: "Pod name", value: instancePod.name},

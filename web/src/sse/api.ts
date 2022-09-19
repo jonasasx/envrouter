@@ -1,7 +1,7 @@
-import {Instance, InstancePod} from "../axios";
+import {Instance, InstancePod, Ref} from "../axios";
 
 export interface SSEvent {
-    itemType: "Ping" | "Instance" | "InstancePod"
-    item: Instance | InstancePod,
+    itemType: "Ping" | "Instance" | "InstancePod" | "RefHead"
+    item: Instance | InstancePod | Ref,
     event: "UPDATED" | "DELETED"
 }

@@ -1,4 +1,4 @@
-import {Instance, InstancePod} from "../../axios";
+import {Application, Instance, InstancePod, Ref} from "../../axios";
 import {withStyles, WithStyles} from "@mui/styles";
 import {Theme} from "@mui/material/styles";
 import {Chip, Dialog, DialogContent, DialogTitle} from "@mui/material";
@@ -6,8 +6,10 @@ import {useState} from "react";
 import InstancePodComponent from "./InstancePodComponent";
 
 interface InstanceProps extends WithStyles<typeof styles> {
+    application: Application
     instance: Instance
     instancePods: Array<InstancePod>
+    refsHeads: Array<Ref>
 }
 
 const styles = (theme: Theme) => ({
@@ -17,7 +19,7 @@ const styles = (theme: Theme) => ({
 })
 
 export default withStyles(styles)(function InstanceComponent(props: InstanceProps) {
-    const {classes, instance, instancePods} = props
+    const {classes, application, instance, instancePods, refsHeads} = props
     const [opened, setOpened] = useState(false)
     const color = "success"
     return (
@@ -36,7 +38,12 @@ export default withStyles(styles)(function InstanceComponent(props: InstanceProp
                 </DialogTitle>
                 <DialogContent dividers={true} className={classes.dialog}>
                     {
-                        instancePods.map(instancePod => <InstancePodComponent key={instancePod.name} instancePod={instancePod}/>)
+                        instancePods.map(instancePod => <InstancePodComponent
+                            key={instancePod.name}
+                            application={application}
+                            instancePod={instancePod}
+                            refsHeads={refsHeads}
+                        />)
                     }
                 </DialogContent>
             </Dialog>
