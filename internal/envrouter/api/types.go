@@ -71,9 +71,9 @@ type InstancePod struct {
 
 // Ref defines model for Ref.
 type Ref struct {
-	Application string `json:"application"`
-	Commit      Commit `json:"commit"`
-	Ref         string `json:"ref"`
+	Commit     Commit `json:"commit"`
+	Ref        string `json:"ref"`
+	Repository string `json:"repository"`
 }
 
 // RefBinding defines model for RefBinding.

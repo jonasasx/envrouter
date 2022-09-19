@@ -13,24 +13,13 @@
  */
 
 
-import {Configuration} from './configuration';
-import globalAxios, {AxiosInstance, AxiosPromise, AxiosRequestConfig} from 'axios';
+import { Configuration } from './configuration';
+import globalAxios, { AxiosPromise, AxiosInstance, AxiosRequestConfig } from 'axios';
 // Some imports not used depending on template conditions
 // @ts-ignore
-import {
-    assertParamExists,
-    createRequestFunction,
-    DUMMY_BASE_URL,
-    serializeDataIfNeeded,
-    setApiKeyToObject,
-    setBasicAuthToObject,
-    setBearerAuthToObject,
-    setOAuthToObject,
-    setSearchParams,
-    toPathString
-} from './common';
+import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from './common';
 // @ts-ignore
-import {BASE_PATH, BaseAPI, COLLECTION_FORMATS, RequestArgs, RequiredError} from './base';
+import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } from './base';
 
 /**
  * 
@@ -269,6 +258,31 @@ export interface InstancePod {
      * @memberof InstancePod
      */
     'parents'?: Array<string>;
+}
+/**
+ * 
+ * @export
+ * @interface Ref
+ */
+export interface Ref {
+    /**
+     * 
+     * @type {string}
+     * @memberof Ref
+     */
+    'ref': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Ref
+     */
+    'repository': string;
+    /**
+     * 
+     * @type {Commit}
+     * @memberof Ref
+     */
+    'commit': Commit;
 }
 /**
  * 
@@ -525,19 +539,48 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {string} sha 
-         * @param {string} applicationName 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1GitApplicationsApplicationNameCommitsShaGet: async (sha: string, applicationName: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiV1GitRefsGet: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/git/refs`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} sha 
+         * @param {string} repositoryName 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1GitRepositoriesRepositoryNameCommitsShaGet: async (sha: string, repositoryName: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'sha' is not null or undefined
-            assertParamExists('apiV1GitApplicationsApplicationNameCommitsShaGet', 'sha', sha)
-            // verify required parameter 'applicationName' is not null or undefined
-            assertParamExists('apiV1GitApplicationsApplicationNameCommitsShaGet', 'applicationName', applicationName)
-            const localVarPath = `/api/v1/git/applications/{applicationName}/commits/{sha}`
+            assertParamExists('apiV1GitRepositoriesRepositoryNameCommitsShaGet', 'sha', sha)
+            // verify required parameter 'repositoryName' is not null or undefined
+            assertParamExists('apiV1GitRepositoriesRepositoryNameCommitsShaGet', 'repositoryName', repositoryName)
+            const localVarPath = `/api/v1/git/repositories/{repositoryName}/commits/{sha}`
                 .replace(`{${"sha"}}`, encodeURIComponent(String(sha)))
-                .replace(`{${"applicationName"}}`, encodeURIComponent(String(applicationName)));
+                .replace(`{${"repositoryName"}}`, encodeURIComponent(String(repositoryName)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -861,13 +904,22 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {string} sha 
-         * @param {string} applicationName 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1GitApplicationsApplicationNameCommitsShaGet(sha: string, applicationName: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Commit>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1GitApplicationsApplicationNameCommitsShaGet(sha, applicationName, options);
+        async apiV1GitRefsGet(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Ref>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1GitRefsGet(options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @param {string} sha 
+         * @param {string} repositoryName 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiV1GitRepositoriesRepositoryNameCommitsShaGet(sha: string, repositoryName: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Commit>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1GitRepositoriesRepositoryNameCommitsShaGet(sha, repositoryName, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
@@ -1004,13 +1056,21 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {string} sha 
-         * @param {string} applicationName 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1GitApplicationsApplicationNameCommitsShaGet(sha: string, applicationName: string, options?: any): AxiosPromise<Commit> {
-            return localVarFp.apiV1GitApplicationsApplicationNameCommitsShaGet(sha, applicationName, options).then((request) => request(axios, basePath));
+        apiV1GitRefsGet(options?: any): AxiosPromise<Array<Ref>> {
+            return localVarFp.apiV1GitRefsGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} sha 
+         * @param {string} repositoryName 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiV1GitRepositoriesRepositoryNameCommitsShaGet(sha: string, repositoryName: string, options?: any): AxiosPromise<Commit> {
+            return localVarFp.apiV1GitRepositoriesRepositoryNameCommitsShaGet(sha, repositoryName, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1151,14 +1211,24 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {string} sha 
-     * @param {string} applicationName 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiV1GitApplicationsApplicationNameCommitsShaGet(sha: string, applicationName: string, options?: AxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1GitApplicationsApplicationNameCommitsShaGet(sha, applicationName, options).then((request) => request(this.axios, this.basePath));
+    public apiV1GitRefsGet(options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1GitRefsGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} sha 
+     * @param {string} repositoryName 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiV1GitRepositoriesRepositoryNameCommitsShaGet(sha: string, repositoryName: string, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1GitRepositoriesRepositoryNameCommitsShaGet(sha, repositoryName, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

@@ -173,9 +173,9 @@ func (g *gitStorage) GetAllRefsHeads() ([]*api.Ref, error) {
 	for repositoryName, v := range g.branches {
 		for ref, commit := range v {
 			result = append(result, &api.Ref{
-				Application: repositoryName,
-				Commit:      *commit,
-				Ref:         ref,
+				Repository: repositoryName,
+				Commit:     *commit,
+				Ref:        ref,
 			})
 		}
 	}
@@ -197,17 +197,18 @@ func (g *gitStorage) GetCommitByHash(repositoryName string, hash string) (*api.C
 }
 
 func (g *gitStorage) addRefHeadCommit(repositoryName string, ref string, commit *api.Commit) {
+	g.commits[commit.Sha] = commit
 	if _, ok := g.branches[repositoryName]; !ok {
 		g.branches[repositoryName] = map[string]*api.Commit{}
 	}
 	if oldCommit, ok := g.branches[repositoryName][ref]; !ok || !reflect.DeepEqual(oldCommit, commit) {
 		g.branches[repositoryName][ref] = commit
 		g.eventsObserver.Publish(nil, api.SSEvent{
-			ItemType: "HeadCommit",
+			ItemType: "RefHead",
 			Item: api.Ref{
-				Application: repositoryName,
-				Commit:      *commit,
-				Ref:         ref,
+				Repository: repositoryName,
+				Commit:     *commit,
+				Ref:        ref,
 			},
 			Event: "UPDATED",
 		})
@@ -216,7 +217,6 @@ func (g *gitStorage) addRefHeadCommit(repositoryName string, ref string, commit 
 
 func (g *gitStorage) ScanRefsHeads(repositoryName string) error {
 	err := g.gitClient.SupplyRefsHeads(repositoryName, func(ref string, commit *api.Commit) {
-		g.commits[commit.Sha] = commit
 		g.addRefHeadCommit(repositoryName, ref, commit)
 	})
 	if err != nil {

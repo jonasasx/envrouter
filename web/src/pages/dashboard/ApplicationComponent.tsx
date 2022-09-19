@@ -1,5 +1,5 @@
 import {WithStyles, withStyles} from "@mui/styles";
-import {Application, DefaultApiFp, Instance, InstancePod, RefBinding} from "../../axios";
+import {Application, DefaultApiFp, Instance, InstancePod, Ref, RefBinding} from "../../axios";
 import {Theme} from "@mui/material/styles";
 import {CircularProgress, Grid, InputAdornment, TextField} from "@mui/material";
 import InstanceComponent from "./InstanceComponent";
@@ -11,6 +11,7 @@ interface ApplicationProps extends WithStyles<typeof styles> {
     instances: Array<Instance>
     instancePods: Array<InstancePod>
     onRefBindingChanged: (refBinding: RefBinding) => void
+    refsHeads: Array<Ref>
 }
 
 const styles = (theme: Theme) => ({
@@ -28,7 +29,7 @@ const styles = (theme: Theme) => ({
 const api = DefaultApiFp()
 
 export default withStyles(styles)(function ApplicationComponent(props: ApplicationProps) {
-    const {classes, application, refBinding, instances, instancePods, onRefBindingChanged} = props
+    const {classes, application, refBinding, instances, instancePods, onRefBindingChanged, refsHeads} = props
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
 
     const onRefChanged = (newRef: string) => {
@@ -45,8 +46,8 @@ export default withStyles(styles)(function ApplicationComponent(props: Applicati
                 })
         }
     }
-
-    const deploying = refBinding?.ref && !instancePods.every(pod => pod.ref === refBinding.ref)
+    const targetCommit = refsHeads.filter(r => r.ref === refBinding?.ref).pop()?.commit
+    const deploying = targetCommit?.sha && !instancePods.every(pod => pod.commitSha === targetCommit.sha)
     return (
         <Grid className={classes.row} container>
             <Grid item xs={6} style={{display: "flex", alignItems: "flex-start"}}>
@@ -55,6 +56,8 @@ export default withStyles(styles)(function ApplicationComponent(props: Applicati
             <Grid item xs={6}>
                 <TextField variant="standard" size="small"
                            defaultValue={refBinding?.ref}
+                           error={!targetCommit}
+                           label={!targetCommit && 'Ref does not exist'}
                            onBlur={e => onRefChanged(e.target.value)}
                            InputProps={{
                                endAdornment: (deploying && <InputAdornment position="end">
@@ -66,8 +69,12 @@ export default withStyles(styles)(function ApplicationComponent(props: Applicati
                 {
                     instances.map(i => <InstanceComponent
                         key={i.name}
+                        application={application}
                         instance={i}
                         instancePods={instancePods.filter(instancePod => instancePod.parents?.includes(`${i.type}/${i.name}`) || false)}
+                        refsHeads={refsHeads.filter(r => {
+                            return refBinding?.ref && r.ref === refBinding.ref
+                        })}
                     />)
                 }
             </Grid>

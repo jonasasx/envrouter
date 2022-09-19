@@ -149,12 +149,12 @@ components:
       type: object
       required:
         - ref
-        - application
+        - repository
         - commit
       properties:
         ref:
           type: string
-        application:
+        repository:
           type: string
         commit:
           $ref: "#/components/schemas/Commit"
@@ -364,4 +364,6 @@ paths:
           content:
             "application/json":
               "schema":
-                "$ref": "#/components/schemas/Ref"
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Ref"
