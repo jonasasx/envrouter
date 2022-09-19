@@ -1,9 +1,0 @@
-namespaces:
-  - name: dev1
-  - name: dev2
-  - name: dev3
-  - name: dev4
-  - name: qa1
-  - name: qa2
-  - name: qa3
-  - name: qa4
