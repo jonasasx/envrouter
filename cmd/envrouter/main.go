@@ -20,6 +20,8 @@ func init() {
 }
 
 func main() {
+	log.SetFormatter(&log.JSONFormatter{})
+
 	var err error
 	client := k8s.NewClient("")
 	eventsObserver := utils.NewObserver()

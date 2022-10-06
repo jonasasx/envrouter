@@ -46,8 +46,11 @@ func (g *gitClient) getRepository(repositoryName string) (*git.Repository, error
 	var r *git.Repository
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		r, err = git.PlainClone(path, true, options)
+		if err != nil {
+			return nil, err
+		}
 	} else {
-		log.Infof("Start fetching %s", repositoryName)
+		log.Debugf("Start fetching %s", repositoryName)
 		r, err = git.PlainOpenWithOptions(path, &git.PlainOpenOptions{})
 		if err != nil {
 			return nil, err
@@ -56,7 +59,7 @@ func (g *gitClient) getRepository(repositoryName string) (*git.Repository, error
 		if err != nil && fmt.Sprint(err) != "already up-to-date" {
 			return nil, err
 		}
-		log.Infof("Fetched %s", repositoryName)
+		log.Debugf("Fetched %s", repositoryName)
 	}
 	return r, err
 }
@@ -64,7 +67,7 @@ func (g *gitClient) getRepository(repositoryName string) (*git.Repository, error
 func (g *gitClient) GetCommitByHash(repositoryName string, hash string) (*api.Commit, error) {
 	r, err := g.getRepository(repositoryName)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	return g.getCommitByHash(r, plumbing.NewHash(hash))
 }
@@ -92,7 +95,7 @@ func (g *gitClient) SupplyRefsHeads(repositoryName string, supplier func(ref str
 	err = iter.ForEach(func(ref *plumbing.Reference) error {
 		if strings.HasPrefix(string(ref.Name()), "refs/remotes/origin/") {
 			refName := strings.Replace(ref.Name().Short(), "origin/", "", 1)
-			log.Infof("ref: %v", refName)
+			log.Debugf("ref: %v", refName)
 			commit, err := g.getCommitByHash(r, ref.Hash())
 			if err != nil {
 				return err
@@ -120,7 +123,7 @@ func (g *gitClient) getGitOptions(repositoryName string) (*git.CloneOptions, err
 	options := &git.CloneOptions{
 		NoCheckout: true,
 		URL:        repository.Url,
-		Progress:   os.Stdout,
+		Progress:   nil,
 	}
 
 	if credentials != nil {
@@ -132,7 +135,7 @@ func (g *gitClient) getGitOptions(repositoryName string) (*git.CloneOptions, err
 		} else if len(credentials.Key) > 0 {
 			key, err := ssh.NewPublicKeys("git", []byte(credentials.Key), "")
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 			key.HostKeyCallbackHelper = ssh.HostKeyCallbackHelper{
 				HostKeyCallback: cryptossh.InsecureIgnoreHostKey(),
