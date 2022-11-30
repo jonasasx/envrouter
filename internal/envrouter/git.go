@@ -57,6 +57,13 @@ func (g *gitClient) getRepository(repositoryName string) (*git.Repository, error
 		}
 		err = r.Fetch(&git.FetchOptions{RemoteName: "origin", Depth: 1, Auth: options.Auth, Progress: options.Progress})
 		if err != nil && fmt.Sprint(err) != "already up-to-date" {
+			if fmt.Sprint(err) == "object not found" {
+				log.Warnf("Remove repo %s on error", path)
+				rmErr := os.RemoveAll(path)
+				if rmErr != nil {
+					log.Warnf("Can not rm path %s", path)
+				}
+			}
 			return nil, err
 		}
 		log.Debugf("Fetched %s", repositoryName)
