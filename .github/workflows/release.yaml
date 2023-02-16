@@ -51,14 +51,12 @@ jobs:
 
       - name: Make tag
         run: |
-          [ "${GITHUB_EVENT_NAME}" == 'pull_request' ] && echo "tag=${GITHUB_HEAD_REF##*/}" >> $GITHUB_ENV || true
-          [ "${GITHUB_EVENT_NAME}" == 'release' ] && echo "tag=${GITHUB_REF##*/}" >> $GITHUB_ENV || true
-          [ "${GITHUB_EVENT_NAME}" == 'push' ] && echo "tag=latest" >> $GITHUB_ENV || true
+          echo "tag=v$(cat ./VERSION)" >> $GITHUB_ENV
 
       - name: Build and push image
         uses: docker/build-push-action@v3
         with:
           context: .
           push: true
-          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.tag }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v`cat ./VERSION`"
+          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.tag }}"
           platforms: linux/amd64
