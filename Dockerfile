@@ -7,7 +7,7 @@ USER envrouter
 
 WORKDIR /app
 
-COPY main /app/envrouter
+COPY build/envrouter /app/envrouter
 COPY web/build /app/public
 
 CMD ["/app/envrouter"]
