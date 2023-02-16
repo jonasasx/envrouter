@@ -60,7 +60,5 @@ jobs:
         with:
           context: .
           push: true
-          tags:
-            - "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.tag }}"
-            - "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v`cat ./VERSION`"
+          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.tag }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:v`cat ./VERSION`"
           platforms: linux/amd64
