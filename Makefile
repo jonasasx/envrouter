@@ -5,6 +5,9 @@ openapi:
 	oapi-codegen --config api/openapi-spec/spec.config.yaml api/openapi-spec/openapi.yaml
 	openapi-generator-cli generate -i api/openapi-spec/openapi.yaml -g typescript-axios -o web/src/axios
 
+deps:
+	go mod download
+
 build:
 	GOOS=linux GOARCH=386 go build -o build/envrouter cmd/envrouter/main.go
 
