@@ -75,11 +75,17 @@ func (i *instanceService) FindAll() ([]*api.Instance, error) {
 func (i *instanceService) mapInstance(deployment *v1.Deployment) *api.Instance {
 	ref := deployment.Annotations[k8s.RefAnnotationKey]
 	commitSha := deployment.Annotations[k8s.ShaAnnotationKey]
+	var environment string
+	if env, ok := deployment.Labels[k8s.EnvironmentLabelKey]; ok {
+		environment = env
+	} else {
+		environment = deployment.Namespace
+	}
 	return &api.Instance{
 		Application: deployment.Labels[k8s.ApplicationLabelKey],
 		Ref:         &ref,
 		CommitSha:   &commitSha,
-		Environment: deployment.Namespace,
+		Environment: environment,
 		Name:        deployment.Name,
 		Type:        "apps/v1/Deployment",
 	}

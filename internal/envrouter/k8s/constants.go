@@ -7,7 +7,7 @@ const (
 	SecretTypeLabelKey              = "envrouter.io/secret-type"
 	CredentialsSecretTypeLabelValue = "credentials-secret"
 	ApplicationLabelKey             = "envrouter.io/app"
-	EnvironmentLabelKey             = "envrouter.io/app"
+	EnvironmentLabelKey             = "envrouter.io/env"
 	RefAnnotationKey                = "envrouter.io/ref"
 	ShaAnnotationKey                = "envrouter.io/sha"
 )

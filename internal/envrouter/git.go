@@ -172,7 +172,7 @@ func NewGitStorage(
 }
 
 func (g *gitStorage) GetAllRefsHeads() ([]*api.Ref, error) {
-	var result []*api.Ref
+	result := []*api.Ref{}
 	for repositoryName, v := range g.branches {
 		for ref, commit := range v {
 			result = append(result, &api.Ref{
