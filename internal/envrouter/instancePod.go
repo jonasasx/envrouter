@@ -108,12 +108,18 @@ func (i *instancePodService) mapInstancePod(pod *v1.Pod) (*api.InstancePod, erro
 	if err != nil {
 		return nil, err
 	}
+	var environment string
+	if env, ok := pod.Labels[k8s.EnvironmentLabelKey]; ok {
+		environment = env
+	} else {
+		environment = pod.Namespace
+	}
 	return &api.InstancePod{
 		Application: pod.Labels[k8s.ApplicationLabelKey],
 		Ref:         &ref,
 		CommitSha:   &commitSha,
 		CreatedTime: pod.CreationTimestamp.String(),
-		Environment: pod.Namespace,
+		Environment: environment,
 		Name:        pod.Name,
 		Phase:       string(pod.Status.Phase),
 		Ready:       ready,

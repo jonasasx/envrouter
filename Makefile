@@ -11,5 +11,11 @@ deps:
 build:
 	GOOS=linux GOARCH=386 go build -o build/envrouter cmd/envrouter/main.go
 
+web:
+	unset CI
+	cd web
+	npm i
+	npm run build
+
 run:
 	go run cmd/envrouter/main.go

@@ -27,7 +27,11 @@ func (e *environmentService) FindAll() ([]*api.Environment, error) {
 	deployments := e.deploymentService.GetAll()
 	namespaces := map[string]bool{}
 	for _, v := range deployments {
-		namespaces[v.Namespace] = true
+		if env, ok := v.Labels[k8s.EnvironmentLabelKey]; ok {
+			namespaces[env] = true
+		} else {
+			namespaces[v.Namespace] = true
+		}
 	}
 	var result []*api.Environment
 	for k, _ := range namespaces {
@@ -41,7 +45,6 @@ func (e *environmentService) FindAll() ([]*api.Environment, error) {
 }
 
 func (e *environmentService) ExistsByName(name string) bool {
-	deployments := e.deploymentService.GetAllInNamespace(name)
-	return len(deployments) > 0
+	return len(e.deploymentService.GetAllInNamespace(name)) > 0 || len(e.deploymentService.GetAllByLabel(k8s.EnvironmentLabelKey, name)) > 0
 
 }

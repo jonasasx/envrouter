@@ -12,6 +12,7 @@ import (
 type DeploymentService interface {
 	GetAll() []*v1.Deployment
 	GetAllInNamespace(ns string) []*v1.Deployment
+	GetAllByLabel(labelName string, labelValue string) []*v1.Deployment
 }
 
 type deploymentService struct {
@@ -73,4 +74,16 @@ func (d *deploymentService) GetAllInNamespace(ns string) []*v1.Deployment {
 
 func (d *deploymentService) GetAll() []*v1.Deployment {
 	return d.GetAllInNamespace("")
+}
+
+func (d *deploymentService) GetAllByLabel(labelName string, labelValue string) []*v1.Deployment {
+	var result []*v1.Deployment
+	deployments := d.store.List()
+	for _, v := range deployments {
+		deployment := v.(*v1.Deployment)
+		if _, ok := deployment.Labels[labelName]; ok && deployment.Labels[labelName] == labelValue {
+			result = append(result, deployment)
+		}
+	}
+	return result
 }
