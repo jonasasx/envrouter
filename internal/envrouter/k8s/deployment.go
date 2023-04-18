@@ -38,7 +38,7 @@ func NewDeploymentService(
 	store, controller := cache.NewInformer(
 		watchlist,
 		&v1.Deployment{},
-		time.Second*0,
+		time.Minute*5,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				observer.Publish(nil, obj.(*v1.Deployment))

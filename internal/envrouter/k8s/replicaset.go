@@ -34,7 +34,7 @@ func NewReplicaSetService(
 	store, controller := cache.NewInformer(
 		watchlist,
 		&v1.ReplicaSet{},
-		time.Second*0,
+		time.Minute*5,
 		cache.ResourceEventHandlerFuncs{},
 	)
 	stop := make(chan struct{})
