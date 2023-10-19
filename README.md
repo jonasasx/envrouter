@@ -24,7 +24,7 @@ on each environment.
 
 ## Helm install
 
-    helm repo add envrouter https://jonasasx.gitlab.io/envrouter/charts
+    helm repo add envrouter https://jonasasx.github.io/envrouter-helm
     helm install my-release envrouter/envrouter
 
 Helm reference: https://github.com/jonasasx/envrouter-helm/blob/master/charts/envrouter/README.md
