@@ -3,6 +3,7 @@ import {useEffect, useState} from "react";
 import {Application, DefaultApiFp, Environment, Instance, InstancePod, Ref, RefBinding} from "../../axios";
 import EnvironmentComponent from "./EnvironmentComponent";
 import {SSEvent} from "../../sse/api";
+import {BASE_PATH} from "../../axios/base";
 
 const api = DefaultApiFp()
 
@@ -112,7 +113,7 @@ export default function DashboardPage() {
     }
 
     useEffect(() => {
-        const eventSource = new EventSource(process.env.REACT_APP_BASE_PATH + '/api/v1/subscription')
+        const eventSource = new EventSource(`${BASE_PATH}/api/v1/subscription`)
         eventSource.onmessage = e => onSSEvent(JSON.parse(e.data) as SSEvent)
         Promise.all([
             api.apiV1EnvironmentsGet().then(request => request()),
