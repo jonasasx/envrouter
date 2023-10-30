@@ -6,16 +6,16 @@ openapi:
 	openapi-generator-cli generate -i api/openapi-spec/openapi.yaml -g typescript-axios -o web/src/axios
 
 deps:
-	go mod download
+	go mod tidy 
 
 build:
 	GOOS=linux GOARCH=386 go build -o build/envrouter cmd/envrouter/main.go
 
+# should be started with make run -B
 web:
 	unset CI
-	cd web
-	npm i
-	npm run build
+	npm --prefix ./web i
+	npm --prefix ./web run build
 
 run:
 	go run cmd/envrouter/main.go
